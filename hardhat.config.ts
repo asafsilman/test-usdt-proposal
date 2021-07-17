@@ -1,4 +1,4 @@
-import { task, HardhatUserConfig } from "hardhat/config"
+import { HardhatUserConfig } from "hardhat/config"
 import "@nomiclabs/hardhat-waffle"
 import "@idle-finance/hardhat-proposals-plugin"
 
@@ -8,6 +8,7 @@ require('dotenv').config()
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
 
+import "./scripts/deploy-contracts"
 import "./scripts/simulate-proposal"
 import "./scripts/test-proposal"
 

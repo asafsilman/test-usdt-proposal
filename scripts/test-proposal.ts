@@ -4,12 +4,15 @@ import { task } from "hardhat/config"
 const addresses = require("./addresses")
 const toBN = function(v: any): BigNumber { return BigNumber.from(v.toString()) };
 
-export default task("test-proposal", "Simulate the proposal", async(_, hre) => {
-    await hre.run("simulate-proposal")
+export default task("test-proposal", "Test the proposal", async(_, hre) => {
+    let proposalInfo = await hre.run("simulate-proposal")
 
     const REBALANCER = "0xB3C8e5534F0063545CBbb7Ce86854Bf42dB8872B"
+    
+    await hre.network.provider.send("hardhat_impersonateAccount", [REBALANCER])
+    let rebalancer = await hre.ethers.getSigner(REBALANCER)
 
-    const timelock = "0x3cD0720CC16E85a8e4Fd3e9D5647E35a4009A75C";
+    let idleUSDTv4 = proposalInfo.idleUSDTv4.connect(rebalancer)
 
     const setAllocationsAndRebalance = async (idleToken: Contract, allocations: number[], unlent: number, whale: string) => {
         const underlying = await idleToken.token();
@@ -59,16 +62,6 @@ export default task("test-proposal", "Simulate the proposal", async(_, hre) => {
         };
     }
 
-    await hre.network.provider.send("hardhat_impersonateAccount", [REBALANCER])
-    let rebalancer = await hre.ethers.getSigner(REBALANCER)
-
-    const idleUSTDv4 = await hre.ethers.getContractAt(
-        require("../abi/IdleTokenGovernance.json"),
-        addresses.idleUSDTV4,
-        rebalancer
-    )
-
-
-    await setAllocationsAndRebalance(idleUSTDv4, [0, 0, 0, 100000], 0, "");
-    await setAllocationsAndRebalance(idleUSTDv4, [25000, 25000, 25000, 25000], 0, "");
+    await setAllocationsAndRebalance(idleUSDTv4, [0, 0, 0, 100000], 0, "");
+    await setAllocationsAndRebalance(idleUSDTv4, [25000, 25000, 25000, 25000], 0, "");
 })
