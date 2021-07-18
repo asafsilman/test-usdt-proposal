@@ -32,7 +32,7 @@ export default subtask("simulate-proposal", "Simulate the proposal", async(_, hr
     
     let proposer = await hre.ethers.getSigner(deployedContracts.IDLE_WHALE)
   
-    let proposal  = (await hre.proposal.builders.alpha())
+    let proposal  = (await hre.proposals.builders.alpha())
         .setProposer(proposer)
         .addAction(deployedContracts.idleUSDTv4, "setAllAvailableTokensAndWrappers", [
           protocolTokens,
