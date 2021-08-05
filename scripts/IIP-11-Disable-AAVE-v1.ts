@@ -97,6 +97,34 @@ export default task("simulate-iip-11", "Deploy IIP 11 Disable AAVE v1", async(_,
     proposal.setProposer(signer)
 
     // To run full simulation, set the flag for simulate to `true`
-    await proposal.simulate(true)
+    await proposal.simulate()
     console.log("Proposal simulated :)")
+    console.log()
+
+    for (const token_aave of IDLE_TOKENS_WITH_AAVE_TOKEN) {
+        const IDLE_TOKEN = token_aave.idleTokenAddress;
+        const AAVE_TOKEN = token_aave.underlyingTokenAddress
+
+        let abi = token_aave.isSafe ? IDLE_TOKEN_SAFE_ABI : IDLE_TOKEN_ABI;
+        let contract = await hre.ethers.getContractAt(abi, IDLE_TOKEN)
+        let contractName = await contract.name()
+        let currentProtocolTokens = [...(await contract.getAPRs())["0"]].map(x=>x.toLowerCase())
+
+        let aave_index = currentProtocolTokens.indexOf(AAVE_TOKEN.toLowerCase())
+
+        if (aave_index==-1) {
+            console.log(`✅ ${contractName} has removed AAVE v1`)
+        } else {
+            console.log(`🚨🚨 ERROR!!! ${contractName} failed to remove AAVE v1`)
+        }
+
+    }
+
+    let despositTokens: Array<String> = await feeCollector.getDepositTokens()
+    despositTokens = despositTokens.map(x => x.toLowerCase())
+    if (despositTokens.includes(ADDRESSES.RAI.live.toLowerCase())) {
+        console.log("✅ Verified that RAI is enabled in feeCollector")
+    } else {
+        console.log("🚨🚨 ERROR!!! Fee collector did not enable RAIs")
+    }
 })
