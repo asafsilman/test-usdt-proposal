@@ -34,7 +34,7 @@ export default subtask("simulate-proposal", "Simulate the proposal", async(_, hr
   
     let proposal  = (await hre.proposals.builders.alpha())
         .setProposer(proposer)
-        .addAction(deployedContracts.idleUSDTv4, "setAllAvailableTokensAndWrappers", [
+        .addContractAction(deployedContracts.idleUSDTv4, "setAllAvailableTokensAndWrappers", [
           protocolTokens,
           wrappers,
           allGovTokens,

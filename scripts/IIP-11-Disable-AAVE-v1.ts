@@ -3,6 +3,7 @@ const ADDRESSES = require("./addresses")
 const IDLE_TOKEN_ABI = require("../abi/IdleTokenGovernance.json")
 const IDLE_TOKEN_SAFE_ABI = require("../abi/IdleTokenGovernanceSafe.json")
 
+const FEE_COLLECTOR_ABI = require("../abi/FeeCollector.json")
 
 export default task("simulate-iip-11", "Deploy IIP 11 Disable AAVE v1", async(_, hre) => {
     const IDLE_TOKENS_WITH_AAVE_TOKEN = [
@@ -60,14 +61,14 @@ export default task("simulate-iip-11", "Deploy IIP 11 Disable AAVE v1", async(_,
 
         if (token_aave.isSafe) {
           const allocations = await contract.getAllocations();
-          proposalBuilder = proposalBuilder.addAction(contract, "setAllAvailableTokensAndWrappers", [
+          proposalBuilder = proposalBuilder.addContractAction(contract, "setAllAvailableTokensAndWrappers", [
             protocolTokens,
             wrappers,
             allocations,
             true,
           ])
         } else {
-          proposalBuilder = proposalBuilder.addAction(contract, "setAllAvailableTokensAndWrappers", [
+          proposalBuilder = proposalBuilder.addContractAction(contract, "setAllAvailableTokensAndWrappers", [
             protocolTokens,
             wrappers,
             allGovTokens,
@@ -76,12 +77,26 @@ export default task("simulate-iip-11", "Deploy IIP 11 Disable AAVE v1", async(_,
         }
     }
 
+    // add RAI ad deposit token
+    let feeCollector = await hre.ethers.getContractAt(FEE_COLLECTOR_ABI, ADDRESSES.feeCollector)
+    proposalBuilder.addContractAction(feeCollector, "registerTokenToDepositList", [ADDRESSES.RAI.live])
+    
+    proposalBuilder.setDescription("IIP-11 Deprecate Aave v1\n<ADD DESCRIPTION>")
+
     let proposal = proposalBuilder.build()
 
     await proposal.printProposalInfo()
 
     console.log("--------------------------------------------------------")
     console.log("Simulating proposal")
-    await proposal.simulate()
+
+    const WHALE_ADDRESS = "0x134B58A2854CD11CD31f1Ae270d52bb4EE018B4F"
+    await hre.network.provider.send("hardhat_impersonateAccount", [WHALE_ADDRESS])
+    let signer = await hre.ethers.getSigner(WHALE_ADDRESS)
+
+    proposal.setProposer(signer)
+
+    // To run full simulation, set the flag for simulate to `true`
+    await proposal.simulate(true)
     console.log("Proposal simulated :)")
 })
