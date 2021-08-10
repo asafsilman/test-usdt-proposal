@@ -1,5 +1,6 @@
 import { BigNumber } from "ethers";
 import { task } from "hardhat/config"
+import { LedgerSigner } from "@ethersproject/hardware-wallets";
 const ADDRESSES = require("./addresses")
 const IDLE_TOKEN_ABI = require("../abi/IdleTokenGovernance.json")
 const IDLE_TOKEN_SAFE_ABI = require("../abi/IdleTokenGovernanceSafe.json")
@@ -7,7 +8,6 @@ const IDLE_TOKEN_SAFE_ABI = require("../abi/IdleTokenGovernanceSafe.json")
 const FEE_COLLECTOR_ABI = require("../abi/FeeCollector.json")
 const GOVERNABLE_FUND_ABI = require("../abi/GovernableFund.json")
 const ERC20_ABI = require("../abi/ERC20.json")
-const { HardwareSigner } = require("./HardwareSigner.js")
 const toBN = function(v: any): BigNumber { return BigNumber.from(v.toString()) };
 
 export default task("iip-11", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) => {
@@ -109,7 +109,8 @@ export default task("iip-11", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
       console.log("Proposal simulated :)")
       console.log()
     } else {
-      const signer = new HardwareSigner(hre.ethers.provider, null, "m/44'/60'/0'/0/0");
+      console.log('Posting proposal on-chain')
+      const signer = new LedgerSigner(hre.ethers.provider, undefined, "m/44'/60'/0'/0/0");
       proposal.setProposer(signer)
       await proposal.propose()
       console.log("Proposal is live");

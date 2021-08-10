@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@ethersproject/hardware-wallets": "^5.4.0",
     "@idle-finance/hardhat-proposals-plugin": "^0.2.3",
     "@ledgerhq/hw-app-eth": "^6.4.0",
     "@ledgerhq/hw-transport-node-hid": "^6.3.0",
