@@ -1,11 +1,16 @@
+import { BigNumber } from "ethers";
 import { task } from "hardhat/config"
 const ADDRESSES = require("./addresses")
 const IDLE_TOKEN_ABI = require("../abi/IdleTokenGovernance.json")
 const IDLE_TOKEN_SAFE_ABI = require("../abi/IdleTokenGovernanceSafe.json")
 
 const FEE_COLLECTOR_ABI = require("../abi/FeeCollector.json")
+const GOVERNABLE_FUND_ABI = require("../abi/GovernableFund.json")
+const ERC20_ABI = require("../abi/ERC20.json")
+const { HardwareSigner } = require("./HardwareSigner.js")
+const toBN = function(v: any): BigNumber { return BigNumber.from(v.toString()) };
 
-export default task("simulate-iip-11", "Deploy IIP 11 Disable AAVE v1", async(_, hre) => {
+export default task("iip-11", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) => {
     const IDLE_TOKENS_WITH_AAVE_TOKEN = [
         { idleTokenAddress: ADDRESSES.idleDAIV4,  underlyingTokenAddress: ADDRESSES.aDAI.live , isSafe: false },
         { idleTokenAddress: ADDRESSES.idleUSDCV4, underlyingTokenAddress: ADDRESSES.aUSDC.live, isSafe: false },
@@ -48,7 +53,6 @@ export default task("simulate-iip-11", "Deploy IIP 11 Disable AAVE v1", async(_,
 
             if (i==aave_index) {
                 console.log(`Removing wrapper @ ${wrapper} for token ${token}`)
-
                 continue
             }
 
@@ -77,30 +81,47 @@ export default task("simulate-iip-11", "Deploy IIP 11 Disable AAVE v1", async(_,
         }
     }
 
-    // add RAI ad deposit token
-    let feeCollector = await hre.ethers.getContractAt(FEE_COLLECTOR_ABI, ADDRESSES.feeCollector)
-    proposalBuilder.addContractAction(feeCollector, "registerTokenToDepositList", [ADDRESSES.RAI.live])
-    
-    proposalBuilder.setDescription("IIP-11 Deprecate Aave v1\n<ADD DESCRIPTION>")
+    // get 4105.7 IDLE for https://gov.idle.finance/t/treasury-league-budget-extension/587
+    const amountToTransfer = toBN('41057').mul(toBN('10').pow('17'));
+    console.log(amountToTransfer.toString());
+    let ecosystemFund = await hre.ethers.getContractAt(GOVERNABLE_FUND_ABI, ADDRESSES.ecosystemFund)
+    proposalBuilder.addContractAction(ecosystemFund, "transfer", [ADDRESSES.IDLE, ADDRESSES.treasuryMultisig, amountToTransfer])
 
+    proposalBuilder.setDescription("IIP-11 Deprecate Aave v1\n Remove Aave v1 protocol from all idleTokens, more info https://gov.idle.finance/t/deprecate-aave-v1/565. Withdraw 4105.7 IDLE from Ecosystem Fund, more info https://gov.idle.finance/t/treasury-league-budget-extension/587")
     let proposal = proposalBuilder.build()
-
     await proposal.printProposalInfo()
 
     console.log("--------------------------------------------------------")
-    console.log("Simulating proposal")
+    // Get current IDLE balance of treasuryMultisig
+    const IDLEContract = await hre.ethers.getContractAt(ERC20_ABI, ADDRESSES.IDLE)
+    const balTreasury = await IDLEContract.balanceOf(ADDRESSES.treasuryMultisig);
 
-    const WHALE_ADDRESS = "0x134B58A2854CD11CD31f1Ae270d52bb4EE018B4F"
-    await hre.network.provider.send("hardhat_impersonateAccount", [WHALE_ADDRESS])
-    let signer = await hre.ethers.getSigner(WHALE_ADDRESS)
+    const isLocalNet = hre.network.name == 'd';
+    // const isLocalNet = hre.network.name == 'hardhat';
+    if (isLocalNet) {
+      console.log("Simulating proposal")
+      const WHALE_ADDRESS = ADDRESSES.devLeagueMultisig;
+      await hre.network.provider.send("hardhat_impersonateAccount", [WHALE_ADDRESS])
+      let signer = await hre.ethers.getSigner(WHALE_ADDRESS)
+      proposal.setProposer(signer)
+      // To run full simulation, set the flag for simulate to `true`
+      await proposal.simulate()
+      console.log("Proposal simulated :)")
+      console.log()
+    } else {
+      const signer = new HardwareSigner(hre.ethers.provider, null, "m/44'/60'/0'/0/0");
+      proposal.setProposer(signer)
+      await proposal.propose()
+      console.log("Proposal is live");
+    }
 
-    proposal.setProposer(signer)
+    console.log("--------------------------------------------------------")
+    // Skip tests in mainnet
+    if (!isLocalNet) {
+      return;
+    }
 
-    // To run full simulation, set the flag for simulate to `true`
-    await proposal.simulate()
-    console.log("Proposal simulated :)")
-    console.log()
-
+    // Test that Aave wrappers have been removed
     for (const token_aave of IDLE_TOKENS_WITH_AAVE_TOKEN) {
         const IDLE_TOKEN = token_aave.idleTokenAddress;
         const AAVE_TOKEN = token_aave.underlyingTokenAddress
@@ -117,14 +138,14 @@ export default task("simulate-iip-11", "Deploy IIP 11 Disable AAVE v1", async(_,
         } else {
             console.log(`🚨🚨 ERROR!!! ${contractName} failed to remove AAVE v1`)
         }
-
     }
 
-    let despositTokens: Array<String> = await feeCollector.getDepositTokens()
-    despositTokens = despositTokens.map(x => x.toLowerCase())
-    if (despositTokens.includes(ADDRESSES.RAI.live.toLowerCase())) {
-        console.log("✅ Verified that RAI is enabled in feeCollector")
+    // Test that treasury multisig got new IDLE balance
+    const balTreasuryFinal = await IDLEContract.balanceOf(ADDRESSES.treasuryMultisig);
+    if (toBN(balTreasuryFinal).sub(toBN(balTreasury)).eq(amountToTransfer)) {
+      console.log("✅ Verified that IDLE have been transferred to the treasury multisig")
     } else {
-        console.log("🚨🚨 ERROR!!! Fee collector did not enable RAIs")
+      console.log(balTreasuryFinal.toString())
+      console.log("🚨🚨 ERROR!!! IDLE not transferred")
     }
 })
