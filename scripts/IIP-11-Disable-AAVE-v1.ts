@@ -12,7 +12,7 @@ const toBN = function(v: any): BigNumber { return BigNumber.from(v.toString()) }
 
 export default task("iip-11", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) => {
     const IDLE_TOKENS_WITH_AAVE_TOKEN = [
-        { idleTokenAddress: ADDRESSES.idleDAIV4,  underlyingTokenAddress: ADDRESSES.aDAI.live , isSafe: false },
+        { idleTokenAddress: ADDRESSES.idleDAIV4,  underlyingTokenAddress: ADDRESSES.aDAI.live, isSafe: false },
         { idleTokenAddress: ADDRESSES.idleUSDCV4, underlyingTokenAddress: ADDRESSES.aUSDC.live, isSafe: false },
         { idleTokenAddress: ADDRESSES.idleUSDTV4, underlyingTokenAddress: ADDRESSES.aUSDT.live, isSafe: false },
         { idleTokenAddress: ADDRESSES.idleSUSDV4, underlyingTokenAddress: ADDRESSES.aSUSD.live, isSafe: false },
@@ -96,8 +96,7 @@ export default task("iip-11", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
     const IDLEContract = await hre.ethers.getContractAt(ERC20_ABI, ADDRESSES.IDLE)
     const balTreasury = await IDLEContract.balanceOf(ADDRESSES.treasuryMultisig);
 
-    const isLocalNet = hre.network.name == 'd';
-    // const isLocalNet = hre.network.name == 'hardhat';
+    const isLocalNet = hre.network.name == 'hardhat';
     if (isLocalNet) {
       console.log("Simulating proposal")
       const WHALE_ADDRESS = ADDRESSES.devLeagueMultisig;
@@ -139,6 +138,19 @@ export default task("iip-11", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
         } else {
             console.log(`🚨🚨 ERROR!!! ${contractName} failed to remove AAVE v1`)
         }
+
+        // Test rebalances
+        // Spread funds between all protocols
+        const allocationsSpread = currentProtocolTokens.map(() => parseInt((100000 / currentProtocolTokens.length).toFixed(0)))
+        const diff = 100000 - allocationsSpread.reduce((p, c) => p + c); // check for rounding errors
+        allocationsSpread[0] = allocationsSpread[0] + diff;
+        console.log('allocationsSpread', allocationsSpread.map(a => a.toString()))
+        await hre.run("test-idle-token", {idleToken: contract, allocations: allocationsSpread, unlent: 0, whale: ''})
+
+        // All funds in the first protocol
+        const allocationsAllInFirst = currentProtocolTokens.map((_, i) => i == 0 ? 100000 : 0);
+        console.log('allocationsAllInFirst', allocationsAllInFirst.map(a => a.toString()))
+        await hre.run("test-idle-token", {idleToken: contract, allocations: allocationsAllInFirst, unlent: 0, whale: ''})
     }
 
     // Test that treasury multisig got new IDLE balance

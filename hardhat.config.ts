@@ -10,7 +10,8 @@ require('dotenv').config()
 
 import "./scripts/deploy-contracts"
 import "./scripts/simulate-proposal"
-import "./scripts/test-proposal"
+import "./scripts/test-idle-token"
+import "./scripts/test-proposal-usdt"
 
 import "./scripts/IIP-11-Disable-AAVE-v1"
 

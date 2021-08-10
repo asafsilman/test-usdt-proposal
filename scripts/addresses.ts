@@ -595,7 +595,7 @@ const idleTokenHelper = {
 
 module.exports = {
   creator: process.env.CREATOR,
-  rebalancerManager: process.env.REBALANCE_MANAGER,
+  rebalancerManager: '0xB3C8e5534F0063545CBbb7Ce86854Bf42dB8872B',
   gstAddress: "0x0000000000b3F879cb30FE243b4Dfee438691c04",
   idlePriceCalculator: '0xAefb1325A2C1756Bc3fcc516D6C2CF947D225358',
   idleDAIBest: '0x78751b12da02728f467a44eac40f5cbc16bd7934',
