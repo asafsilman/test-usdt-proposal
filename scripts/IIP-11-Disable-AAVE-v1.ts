@@ -41,7 +41,11 @@ export default task("iip-11", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
         let protocolTokens = []
         let wrappers = []
         let protocolGovTokens = []
-        let allGovTokens = []
+        let allGovTokens = new Array<string>();
+
+        if (!token_aave.isSafe) {
+          await contract.getGovTokens();
+        }
 
         let aave_index = currentProtocolTokens.indexOf(AAVE_TOKEN.toLowerCase())
         if (aave_index==-1) console.log("COULD NOT FIND AAVE TOKEN")
@@ -57,8 +61,6 @@ export default task("iip-11", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
                 console.log(`Removing wrapper @ ${wrapper} for token ${token}`)
                 continue
             }
-
-            if (govToken !== ADDRESSES.addr0) { allGovTokens.push(govToken) }
 
             protocolTokens.push(token)
             wrappers.push(wrapper);
@@ -114,8 +116,7 @@ export default task("iip-11", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
       const ledgerSigner = new LedgerSigner(hre.ethers.provider, undefined, "m/44'/60'/0'/0/0");
 
       const service = new SafeService('https://safe-transaction.gnosis.io/')
-      const signer = await SafeEthersSigner.create(ADDRESSES.devLeagueMultisig, ledgerSigner, service)
-
+      const signer = await SafeEthersSigner.create(ADDRESSES.devLeagueMultisig, ledgerSigner, service, hre.ethers.provider)
       proposal.setProposer(signer)
       await proposal.propose()
       console.log("Proposal is live");
