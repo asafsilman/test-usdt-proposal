@@ -110,12 +110,10 @@ export default task("iip-11", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
       console.log("Proposal simulated :)")
       console.log()
     } else {
-      console.log('Posting proposal on-chain')
+      console.log('Posting proposal on-chain with Dev League Multisig')
       const ledgerSigner = new LedgerSigner(hre.ethers.provider, undefined, "m/44'/60'/0'/0/0");
-
       const service = new SafeService('https://safe-transaction.gnosis.io/')
-      const signer = await SafeEthersSigner.create(ADDRESSES.devLeagueMultisig, ledgerSigner, service)
-
+      const signer = await SafeEthersSigner.create(ADDRESSES.devLeagueMultisig, ledgerSigner, service, hre.ethers.provider)
       proposal.setProposer(signer)
       await proposal.propose()
       console.log("Proposal is live");
