@@ -1,6 +1,8 @@
 import { BigNumber } from "ethers";
 import { task } from "hardhat/config"
 import { LedgerSigner } from "@ethersproject/hardware-wallets";
+import {SafeEthersSigner, SafeService} from "@gnosis.pm/safe-ethers-adapters"
+
 const ADDRESSES = require("./addresses")
 const IDLE_TOKEN_ABI = require("../abi/IdleTokenGovernance.json")
 const IDLE_TOKEN_SAFE_ABI = require("../abi/IdleTokenGovernanceSafe.json")
@@ -109,7 +111,11 @@ export default task("iip-11", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
       console.log()
     } else {
       console.log('Posting proposal on-chain')
-      const signer = new LedgerSigner(hre.ethers.provider, undefined, "m/44'/60'/0'/0/0");
+      const ledgerSigner = new LedgerSigner(hre.ethers.provider, undefined, "m/44'/60'/0'/0/0");
+
+      const service = new SafeService('https://safe-transaction.gnosis.io/')
+      const signer = await SafeEthersSigner.create(ADDRESSES.devLeagueMultisig, ledgerSigner, service)
+
       proposal.setProposer(signer)
       await proposal.propose()
       console.log("Proposal is live");
