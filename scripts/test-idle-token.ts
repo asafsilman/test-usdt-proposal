@@ -19,6 +19,13 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
     let idleToken = args.idleToken.connect(rebalancer)
     let allocations = args.allocations;
 
+    const waitBlocks = async (n: number) => {
+      console.log(`mining ${n} blocks...`);
+      for (var i = 0; i < n; i++) {
+        await hre.ethers.provider.send("evm_mine", []);
+      };
+    }
+
     const setAllocationsAndRebalance = async (idleToken: Contract, allocations: number[], unlent: number, whale: string) => {
         const underlying = await idleToken.token();
         const underlyingContract = await hre.ethers.getContractAt("IERC20Detailed", underlying);
@@ -66,5 +73,46 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
         };
     }
 
+    const mintAndRedeem = async (account: any) => {
+      const underlying = await idleToken.token();
+      const underlyingContract = await hre.ethers.getContractAt("IERC20Detailed", underlying);
+      const idleContract = await hre.ethers.getContractAt("IERC20Detailed", addresses.IDLE);
+      const tokenDecimals = await underlyingContract.decimals();
+      const oneToken = toBN(`10`).pow(tokenDecimals);
+
+      whale = "0xc3d03e4f041fd4cd388c549ee2a29a9e5075882f";
+      const whaleSigner = await hre.ethers.getSigner(whale);
+      await hre.ethers.provider.send("hardhat_setBalance", [whale, "0xffffffffffffffff"])
+      await hre.network.provider.request({
+        method: "hardhat_impersonateAccount",
+        params: [whale],
+      });
+
+      console.log("underlying", underlyingContract.address, await underlyingContract.name());
+      console.log("whale", whale)
+      console.log("whale balance", (await underlyingContract.balanceOf(whale)).toString())
+
+      const amount = oneToken.mul(toBN("100"));
+      await underlyingContract.connect(whaleSigner).transfer(account.address, amount);
+      await underlyingContract.connect(account).approve(idleToken.address, amount);
+      await idleToken.connect(account).mintIdleToken(amount, true, addresses.addr0);
+
+      await waitBlocks(1000);
+      console.log("IDLE balance before", (await idleContract.balanceOf(account.address)).toString());
+      const balance = await idleToken.balanceOf(account.address);
+      await idleToken.connect(account).redeemIdleToken(balance);
+      console.log("IDLE balance after", (await idleContract.balanceOf(account.address)).toString());
+    }
+
+    const govTokens = await idleToken.getGovTokens();
+    console.log(`Gov Tokens (${govTokens.length}): `);
+    for (let i = 0; i < govTokens.length; i++) {
+      const govToken = await hre.ethers.getContractAt("IERC20Detailed", govTokens[i]);
+      console.log("- ", await govToken.name(), govToken.address);
+    }
+
+    const accounts = await hre.ethers.getSigners();
     await setAllocationsAndRebalance(idleToken, allocations, unlent, whale);
+    await mintAndRedeem(accounts[0]);
+
 })

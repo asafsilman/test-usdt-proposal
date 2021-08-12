@@ -44,7 +44,7 @@ export default task("iip-11", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
         let allGovTokens = new Array<string>();
 
         if (!token_aave.isSafe) {
-          await contract.getGovTokens();
+          allGovTokens = await contract.getGovTokens();
         }
 
         let aave_index = currentProtocolTokens.indexOf(AAVE_TOKEN.toLowerCase())
