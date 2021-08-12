@@ -151,12 +151,12 @@ export default task("iip-11", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
         const diff = 100000 - allocationsSpread.reduce((p, c) => p + c); // check for rounding errors
         allocationsSpread[0] = allocationsSpread[0] + diff;
         console.log('allocationsSpread', allocationsSpread.map(a => a.toString()))
-        await hre.run("test-idle-token", {idleToken: contract, allocations: allocationsSpread, unlent: 0, whale: ''})
+        await hre.run("test-idle-token", {idleToken: contract, allocations: allocationsSpread, unlent: 0, whale: '', isSafe: token_aave.isSafe})
 
         // All funds in the first protocol
         const allocationsAllInFirst = currentProtocolTokens.map((_, i) => i == 0 ? 100000 : 0);
         console.log('allocationsAllInFirst', allocationsAllInFirst.map(a => a.toString()))
-        await hre.run("test-idle-token", {idleToken: contract, allocations: allocationsAllInFirst, unlent: 0, whale: ''})
+        await hre.run("test-idle-token", {idleToken: contract, allocations: allocationsAllInFirst, unlent: 0, whale: '', isSafe: token_aave.isSafe})
     }
 
     // Test that treasury multisig got new IDLE balance
