@@ -41,7 +41,11 @@ export default task("iip-11", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
         let protocolTokens = []
         let wrappers = []
         let protocolGovTokens = []
-        let allGovTokens = []
+        let allGovTokens = new Array<string>();
+
+        if (!token_aave.isSafe) {
+          allGovTokens = await contract.getGovTokens();
+        }
 
         let aave_index = currentProtocolTokens.indexOf(AAVE_TOKEN.toLowerCase())
         if (aave_index==-1) console.log("COULD NOT FIND AAVE TOKEN")
@@ -57,8 +61,6 @@ export default task("iip-11", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
                 console.log(`Removing wrapper @ ${wrapper} for token ${token}`)
                 continue
             }
-
-            if (govToken !== ADDRESSES.addr0) { allGovTokens.push(govToken) }
 
             protocolTokens.push(token)
             wrappers.push(wrapper);
