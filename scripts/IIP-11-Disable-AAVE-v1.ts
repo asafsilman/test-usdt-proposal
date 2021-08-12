@@ -106,6 +106,7 @@ export default task("iip-11", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
       const WHALE_ADDRESS = ADDRESSES.devLeagueMultisig;
       await hre.network.provider.send("hardhat_impersonateAccount", [WHALE_ADDRESS])
       let signer = await hre.ethers.getSigner(WHALE_ADDRESS)
+      await hre.network.provider.send("hardhat_setBalance", [WHALE_ADDRESS, "0xffffffffffffffff"])
       proposal.setProposer(signer)
       // To run full simulation, set the flag for simulate to `true`
       await proposal.simulate()
