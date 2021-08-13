@@ -10,7 +10,8 @@ require('dotenv').config()
 
 import "./scripts/deploy-contracts"
 import "./scripts/simulate-proposal"
-import "./scripts/test-proposal"
+import "./scripts/test-idle-token"
+import "./scripts/test-proposal-usdt"
 
 import "./scripts/IIP-11-Disable-AAVE-v1"
 
@@ -24,7 +25,14 @@ const config: HardhatUserConfig = {
       forking: {
         url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
         blockNumber: 12725152,
-      }
+      },
+      chainId: 1
+    },
+    mainnet: {
+      url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+      gasPrice: 'auto',
+      gas: 'auto',
+      timeout: 120000
     }
   },
   proposals: {
