@@ -5,6 +5,7 @@ import "@idle-finance/hardhat-proposals-plugin"
 require('dotenv').config()
 
 import "./scripts/iip-11"
+import "./scripts/IIP-12"
 
 const config: HardhatUserConfig = {
   solidity: "0.5.16",
