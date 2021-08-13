@@ -1,13 +1,13 @@
 {
-  "name": "test-proposal",
+  "name": "idle-proposals",
   "version": "1.0.0",
-  "description": "",
+  "description": "Idle Proposals Monorepo",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Idle Dev League",
+  "license": "Apache 2.0",
   "dependencies": {
     "@idle-finance/hardhat-proposals-plugin": "^0.2.3",
     "@openzeppelin/contracts": "^2.5.0",
