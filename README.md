@@ -1,6 +1,9 @@
-# Test proposal using @idle-finance/hardhat-proposals-plugin
+# Idle Proposals Monorepo
 
-Create a proposal for idle finance to enable CREAM for usdt idle pool.
+Idle Improvement Proposals (IIPs) are formal on-chain proposals which allow community members to vote on changes to the IDLE protocol.
+
+This repo contains the codebases and test for deploying IIPs to 
+
 
 Contracts are cloned from `https://github.com/Idle-Labs/idle-contracts`
 

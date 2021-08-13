@@ -4,20 +4,8 @@ import "@idle-finance/hardhat-proposals-plugin"
 
 require('dotenv').config()
 
+import "./scripts/iip-11"
 
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
-
-import "./scripts/deploy-contracts"
-import "./scripts/simulate-proposal"
-import "./scripts/test-idle-token"
-import "./scripts/test-proposal-usdt"
-
-import "./scripts/IIP-11-Disable-AAVE-v1"
-
-/**
- * @type import('hardhat/config').HardhatUserConfig
- */
 const config: HardhatUserConfig = {
   solidity: "0.5.16",
   networks: {

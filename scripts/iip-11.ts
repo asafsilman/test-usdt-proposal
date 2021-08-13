@@ -3,7 +3,7 @@ import { task } from "hardhat/config"
 import { LedgerSigner } from "@ethersproject/hardware-wallets";
 import {SafeEthersSigner, SafeService} from "@gnosis.pm/safe-ethers-adapters"
 
-const ADDRESSES = require("./addresses")
+const ADDRESSES = require("../common/addresses")
 const IDLE_TOKEN_ABI = require("../abi/IdleTokenGovernance.json")
 const IDLE_TOKEN_SAFE_ABI = require("../abi/IdleTokenGovernanceSafe.json")
 
