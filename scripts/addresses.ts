@@ -595,7 +595,7 @@ const idleTokenHelper = {
 
 module.exports = {
   creator: process.env.CREATOR,
-  rebalancerManager: process.env.REBALANCE_MANAGER,
+  rebalancerManager: '0xB3C8e5534F0063545CBbb7Ce86854Bf42dB8872B',
   gstAddress: "0x0000000000b3F879cb30FE243b4Dfee438691c04",
   idlePriceCalculator: '0xAefb1325A2C1756Bc3fcc516D6C2CF947D225358',
   idleDAIBest: '0x78751b12da02728f467a44eac40f5cbc16bd7934',
@@ -691,7 +691,7 @@ module.exports = {
   governorAlpha: '0x2256b25CFC8E35c3135664FD03E77595042fe31B',
   ecosystemFund: '0xb0aA1f98523Ec15932dd5fAAC5d86e57115571C7',
   vesterFactory: '0xbF875f2C6e4Cc1688dfe4ECf79583193B6089972',
-  whale: '0x3f5CE5FBFe3E9af3971dD833D26bA9b5C936f0bE',
+  whale: '0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503',
   forkProposer: '0x3675D2A334f17bCD4689533b7Af263D48D96eC72',
   bountyAddressForEB: '0x394495a3800d1504b5686d398836baefebd0c5b7',
   mintRedeemTestUser: '0xF1363D3D55d9e679cC6aa0a0496fD85BDfCF7464',
