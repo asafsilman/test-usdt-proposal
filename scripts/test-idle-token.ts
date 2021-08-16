@@ -1,7 +1,7 @@
 import { BigNumber, Contract } from "ethers";
 import { task } from "hardhat/config"
 
-const addresses = require("./addresses")
+const addresses = require("../common/addresses")
 const toBN = function(v: any): BigNumber { return BigNumber.from(v.toString()) };
 
 export default task("test-idle-token", "Test an idleToken by doing a rebalance", async (args: any, hre) => {
@@ -15,7 +15,7 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
     }
 
     let unlent = args.unlent || 0;
-    let whale = args.whale || '';
+    let whale = args.whale;
     let idleToken = args.idleToken.connect(rebalancer)
     let allocations = args.allocations;
 
@@ -81,7 +81,7 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
       const tokenDecimals = await underlyingContract.decimals();
       const oneToken = toBN(`10`).pow(tokenDecimals);
 
-      const whale = addresses.whale;
+      whale = whale || addresses.whale;
       const whaleSigner = await hre.ethers.getSigner(whale);
       await hre.ethers.provider.send("hardhat_setBalance", [whale, "0xffffffffffffffff"])
       await hre.network.provider.request({

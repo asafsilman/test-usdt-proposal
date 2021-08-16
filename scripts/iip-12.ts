@@ -147,5 +147,5 @@ export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
   const diff = 100000 - allocationsSpread.reduce((p, c) => p + c); // check for rounding errors
   allocationsSpread[0] = allocationsSpread[0] + diff;
   console.log('allocationsSpread', allocationsSpread.map(a => a.toString()));
-  // await hre.run("test-idle-token", {idleToken: idleRAI, allocations: allocationsSpread, unlent: 0, whale: ''})
+  await hre.run("test-idle-token", {idleToken: idleRAI, allocations: allocationsSpread, unlent: 0, whale: '0x9fd73e943a1e80d4cb33aa0cc81d8da148824d44'})
 });

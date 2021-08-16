@@ -6,6 +6,7 @@ require('dotenv').config()
 
 import "./scripts/iip-11"
 import "./scripts/iip-12"
+import "./scripts/test-idle-token"
 
 const config: HardhatUserConfig = {
   solidity: "0.5.16",
