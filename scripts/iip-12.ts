@@ -13,6 +13,8 @@ const ERC20_ABI = require("../abi/ERC20.json")
 const toBN = function(v: any): BigNumber { return BigNumber.from(v.toString()) };
 
 export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) => {
+  const isLocalNet = hre.network.name == 'hardhat';
+
   let proposalBuilder = hre.proposals.builders.alpha();
 
   const idleRAI = await hre.ethers.getContractAt(IDLE_TOKEN_ABI, addresses.idleRAIV4);
@@ -44,6 +46,21 @@ export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
     throw("CREAM TOKEN NOT FOUND");
   }
 
+  if (isLocalNet) {
+    console.log("local network, rebalancing...");
+    console.log(`creamTokenIndex: ${creamTokenIndex}`);
+    await hre.network.provider.send("hardhat_setBalance", [addresses.timelock, "0xffffffffffffffff"]);
+    await hre.network.provider.send("hardhat_impersonateAccount", [addresses.timelock]);
+    const timelock = await hre.ethers.getSigner(addresses.timelock);
+    await idleRAI.connect(timelock).setAllocations([toBN("0"), toBN("50000"), toBN("50000")]);
+  }
+
+  const currentAllocations = await idleRAI.getAllocations();
+  console.log(currentAllocations.map((x: any) => x.toString()))
+  if(!currentAllocations[creamTokenIndex].eq(toBN("0"))) {
+    throw("CREAM ALLOCATION MUST BE ZERO BEFORE RUNNING THIS PROPOSAL");
+  }
+
   govTokens.push(addresses.IDLE);
 
   console.log("protocolTokens", protocolTokens);
@@ -73,9 +90,6 @@ export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
   proposalBuilder.setDescription("IIP-12 TODO");
   const proposal = proposalBuilder.build()
   await proposal.printProposalInfo();
-
-
-  const isLocalNet = hre.network.name == 'hardhat';
 
   if (isLocalNet) {
     console.log("Simulating proposal")
