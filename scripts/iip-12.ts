@@ -32,7 +32,7 @@ export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
     const govToken = await idleRAI.getProtocolTokenToGov(token);
 
     // remove cream token
-    if (token.toLowerCase() == addresses.crRAI.live.toLowerCase()) {
+    if (token == addresses.crRAI.live.toLowerCase()) {
       creamTokenIndex = i;
       continue;
     }
@@ -165,6 +165,23 @@ export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
     console.log("✅ Verified that IDLE is added as gov token");
   } else {
     console.log("🚨🚨 ERROR!!! IdleRAI doens't have IDLE as gov token");
+  }
+
+
+  const newProtocolTokens = [...(await idleRAI.getAPRs())["0"]].map(x => x.toLowerCase());
+  let creamTokenFound = false;
+  for (var i = 0; i < newProtocolTokens.length; i++) {
+    const token = newProtocolTokens[i];
+    if (token == addresses.crRAI.live.toLowerCase()) {
+      creamTokenFound = true;
+      break;
+    }
+  }
+
+  if (!creamTokenFound) {
+    console.log("✅ Verified that cream is no longer used");
+  } else {
+    console.log("🚨🚨 ERROR!!! IdleRAI still uses cream");
   }
 
   // Test Idle Token
