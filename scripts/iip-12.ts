@@ -22,15 +22,26 @@ export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
   const wrappers = [];
   const govTokens = (await idleRAI.getGovTokens()).map((a: string) => a);
   const govTokensEqualLength = [];
+  let creamTokenIndex = -1;
 
   for (var i = 0; i < currentProtocolTokens.length; i++) {
     const token = currentProtocolTokens[i];
     const wrapper = await idleRAI.protocolWrappers(token);
     const govToken = await idleRAI.getProtocolTokenToGov(token);
 
+    // remove cream token
+    if (token.toLowerCase() == addresses.crRAI.live.toLowerCase()) {
+      creamTokenIndex = i;
+      continue;
+    }
+
     protocolTokens.push(token);
     wrappers.push(wrapper);
     govTokensEqualLength.push(govToken)
+  }
+
+  if (creamTokenIndex < 0) {
+    throw("CREAM TOKEN NOT FOUND");
   }
 
   govTokens.push(addresses.IDLE);
@@ -143,7 +154,9 @@ export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
   }
 
   // Test Idle Token
-  const allocationsSpread = currentProtocolTokens.map(() => parseInt((100000 / currentProtocolTokens.length).toFixed(0)))
+  console.log("creamTokenIndex", creamTokenIndex);
+  let allocationsSpread = currentProtocolTokens.map(() => parseInt((100000 / currentProtocolTokens.length).toFixed(0)))
+  allocationsSpread = [...allocationsSpread.slice(0, creamTokenIndex), ...allocationsSpread.slice(creamTokenIndex + 1)];
   const diff = 100000 - allocationsSpread.reduce((p, c) => p + c); // check for rounding errors
   allocationsSpread[0] = allocationsSpread[0] + diff;
   console.log('allocationsSpread', allocationsSpread.map(a => a.toString()));
