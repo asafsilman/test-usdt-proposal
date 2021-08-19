@@ -18,6 +18,7 @@ export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
   let proposalBuilder = hre.proposals.builders.alpha();
 
   const idleRAI = await hre.ethers.getContractAt(IDLE_TOKEN_ABI, addresses.idleRAIV4);
+  const crRAI = await hre.ethers.getContractAt(ERC20_ABI, addresses.crRAI.live)
   const currentProtocolTokens = [...(await idleRAI.getAPRs())["0"]].map(x => x.toLowerCase())
 
   const protocolTokens = [];
@@ -52,7 +53,15 @@ export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
     await hre.network.provider.send("hardhat_setBalance", [addresses.timelock, "0xffffffffffffffff"]);
     await hre.network.provider.send("hardhat_impersonateAccount", [addresses.timelock]);
     const timelock = await hre.ethers.getSigner(addresses.timelock);
+    const allocations = [toBN("50000"), toBN("50000"), toBN("50000")];
+    allocations[creamTokenIndex] = toBN("0");
     await idleRAI.connect(timelock).setAllocations([toBN("0"), toBN("50000"), toBN("50000")]);
+    await idleRAI.connect(timelock).rebalance();
+  }
+
+  const crRAIBalance = await crRAI.balanceOf(idleRAI.address);
+  if (crRAIBalance.gt(toBN("10"))) {
+    throw(`IdleRAI still has a balance in crRAI. Balance: ${crRAIBalance.toString()}`);
   }
 
   const currentAllocations = await idleRAI.getAllocations();
