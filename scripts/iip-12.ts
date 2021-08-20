@@ -8,6 +8,7 @@ const IDLE_TOKEN_ABI = require("../abi/IdleTokenGovernance.json")
 const IDLE_CONTROLLER_ABI = require("../abi/IdleController.json")
 const PRICE_ORACLE_ABI = require("../abi/PriceOracleV2.json")
 const FEE_COLLECTOR_ABI = require("../abi/FeeCollector.json")
+const GOVERNABLE_FUND = require("../abi/GovernableFund.json");
 
 const ERC20_ABI = require("../abi/ERC20.json")
 const toBN = function(v: any): BigNumber { return BigNumber.from(v.toString()) };
@@ -62,20 +63,16 @@ export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
   const crRAIBalance = await crRAI.balanceOf(idleRAI.address);
   if (crRAIBalance.gt(toBN("10"))) {
     throw(`IdleRAI still has a balance in crRAI. Balance: ${crRAIBalance.toString()}`);
+  } else {
+    console.log(`✅ Verified that IdleRAI has no crRAI balance. (${crRAIBalance.toString()})`);
   }
 
   const currentAllocations = await idleRAI.getAllocations();
-  console.log(currentAllocations.map((x: any) => x.toString()))
   if(!currentAllocations[creamTokenIndex].eq(toBN("0"))) {
     throw("CREAM ALLOCATION MUST BE ZERO BEFORE RUNNING THIS PROPOSAL");
   }
 
   govTokens.push(addresses.IDLE);
-
-  console.log("protocolTokens", protocolTokens);
-  console.log("wrappers", wrappers);
-  console.log("govTokens", govTokens);
-  console.log("govTokensEqualLength", govTokensEqualLength);
 
   proposalBuilder = proposalBuilder.addContractAction(idleRAI, "setAllAvailableTokensAndWrappers", [
     protocolTokens,      // protocolTokens
@@ -84,18 +81,85 @@ export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
     govTokensEqualLength // _newGovTokensEqualLen
   ]);
 
+  // updateFeedETH
   const priceOracle = await hre.ethers.getContractAt(PRICE_ORACLE_ABI, addresses.priceOracleV1);
   const raiEthPriceFeed = "0x4ad7B025127e89263242aB68F0f9c4E5C033B489";
   proposalBuilder = proposalBuilder.addContractAction(priceOracle, "updateFeedETH", [addresses.RAI.live, raiEthPriceFeed]);
 
+  // add IdleRAI market
   const idleController = await hre.ethers.getContractAt(IDLE_CONTROLLER_ABI, addresses.idleController);
   const idleRAISpeedBefore = await idleController.idleSpeeds(addresses.idleRAIV4);
   proposalBuilder = proposalBuilder.addContractAction(idleController, "_supportMarkets", [[idleRAI.address]]);
   proposalBuilder = proposalBuilder.addContractAction(idleController, "_addIdleMarkets", [[idleRAI.address]]);
 
+  // registerTokenToDepositList
   const feeCollector = await hre.ethers.getContractAt(FEE_COLLECTOR_ABI, addresses.feeCollector)
   proposalBuilder.addContractAction(feeCollector, "registerTokenToDepositList", [addresses.RAI.live])
 
+  const feeTreasury = await hre.ethers.getContractAt(GOVERNABLE_FUND, addresses.feeTreasury)
+  const ecosystemFund = await hre.ethers.getContractAt(GOVERNABLE_FUND, addresses.ecosystemFund)
+
+  const weth = await hre.ethers.getContractAt(ERC20_ABI, addresses.WETH.live);
+  const comp = await hre.ethers.getContractAt(ERC20_ABI, addresses.COMP.live);
+  const usdc = await hre.ethers.getContractAt(ERC20_ABI, addresses.USDC.live);
+  const idle = await hre.ethers.getContractAt(ERC20_ABI, addresses.IDLE);
+  const stkAAVE = await hre.ethers.getContractAt(ERC20_ABI, addresses.stkAAVE.live);
+
+  // Tokens from FeeTreasury to treasuryMultisig
+  const transfers: any = [
+    // some WETH from feeTreasury
+    {
+      token: addresses.WETH.live,
+      contract: feeTreasury,
+      method: "transfer",
+      to: addresses.devLeagueMultisig,
+      value: toBN("1000000000000000000"), // TODO: set real value
+    },
+    // all COMP from feeTreasury
+    {
+      token: addresses.COMP.live,
+      contract: feeTreasury,
+      method: "transfer",
+      to: addresses.devLeagueMultisig,
+      value: await comp.balanceOf(addresses.feeTreasury),
+    },
+    // all USDC from feeTreasury
+    {
+      token: addresses.USDC.live,
+      contract: feeTreasury,
+      method: "transfer",
+      to: addresses.devLeagueMultisig,
+      value: await usdc.balanceOf(addresses.feeTreasury),
+    },
+    // all stkAAVE from feeCollector
+    {
+      token: addresses.stkAAVE.live,
+      contract: feeCollector,
+      method: "withdraw",
+      to: addresses.devLeagueMultisig,
+      value: await stkAAVE.balanceOf(addresses.feeCollector),
+    },
+    // 16183 from ecosystemFund
+    {
+      token: addresses.IDLE,
+      contract: ecosystemFund,
+      method: "transfer",
+      to: addresses.devLeagueMultisig,
+      value: toBN("16183").mul(toBN("10").pow(toBN("18"))),
+    },
+  ];
+
+  for (var i = 0; i < transfers.length; i++) {
+    const t = transfers[i];
+    const token = await hre.ethers.getContractAt(ERC20_ABI, t.token);
+    const tokenName = await token.name();
+    t.receiverInitialBalance = await token.balanceOf(t.to);
+    console.log(`add transfer action from ${t.contract.address}, to ${t.to} of ${t.value.toString()} ${tokenName}`);
+    proposalBuilder.addContractAction(t.contract, t.method, [t.token, t.to, t.value]);
+  }
+
+
+  // Proposal
   proposalBuilder.setDescription("IIP-12 TODO");
   const proposal = proposalBuilder.build()
   await proposal.printProposalInfo();
@@ -191,6 +255,23 @@ export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
     console.log("✅ Verified that cream is no longer used");
   } else {
     console.log("🚨🚨 ERROR!!! IdleRAI still uses cream");
+  }
+
+  // Check transfers
+  for (var i = 0; i < transfers.length; i++) {
+    const t = transfers[i];
+    const token = await hre.ethers.getContractAt(ERC20_ABI, t.token);
+    const tokenName = await token.name();
+    const receiverNewBalance = await token.balanceOf(t.to);
+    console.log(`checking transfer action from ${t.contract.address}, to ${t.to} of ${t.value.toString()} ${tokenName}`);
+
+    console.log(`${t.to} initial balance of ${tokenName}: ${t.receiverInitialBalance.toString()}`);
+    console.log(`${t.to}    new  balance of ${tokenName}: ${receiverNewBalance.toString()}`);
+    if (!receiverNewBalance.eq(t.receiverInitialBalance.add(t.value))) {
+      console.log(`🚨🚨 ERROR!!! transfer not received`);
+    } else {
+      console.log(`✅ Transfer verified\n`);
+    }
   }
 
   // Test Idle Token
