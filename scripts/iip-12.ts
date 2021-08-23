@@ -95,9 +95,6 @@ export default task("iip-12", iipDescription, async(_, hre) => {
     govTokensEqualLength // _newGovTokensEqualLen
   ]);
 
-  // setAToken
-  proposalBuilder = proposalBuilder.addContractAction(idleRAI, "setAToken", [addresses.aRAI.live]);
-
   // updateFeedETH
   const priceOracle = await hre.ethers.getContractAt(PRICE_ORACLE_ABI, addresses.priceOracleV1);
   const raiEthPriceFeed = "0x4ad7B025127e89263242aB68F0f9c4E5C033B489";
@@ -165,6 +162,9 @@ export default task("iip-12", iipDescription, async(_, hre) => {
     console.log(`add transfer action from ${t.contract.address}, to ${t.to} of ${t.value.toString()} ${tokenName}`);
     proposalBuilder.addContractAction(t.contract, t.method, [t.token, t.to, t.value]);
   }
+
+  // setAToken
+  proposalBuilder = proposalBuilder.addContractAction(idleRAI, "setAToken", [addresses.aRAI.live]);
 
   // Proposal
   proposalBuilder.setDescription(iipDescription);
