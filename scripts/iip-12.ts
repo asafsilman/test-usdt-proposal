@@ -13,7 +13,8 @@ const GOVERNABLE_FUND = require("../abi/GovernableFund.json");
 const ERC20_ABI = require("../abi/ERC20.json")
 const toBN = function(v: any): BigNumber { return BigNumber.from(v.toString()) };
 
-export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) => {
+const iipDescription = "IIP-12 idleRAI upgrades and Leagues funding"
+export default task("iip-12", iipDescription, async(_, hre) => {
   const isLocalNet = hre.network.name == 'hardhat';
 
   let proposalBuilder = hre.proposals.builders.alpha();
@@ -72,14 +73,19 @@ export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
     throw("CREAM ALLOCATION MUST BE ZERO BEFORE RUNNING THIS PROPOSAL");
   }
 
+  govTokens.push(addresses.stkAAVE.live);
   govTokens.push(addresses.IDLE);
 
+  // setAllAvailableTokensAndWrappers
   proposalBuilder = proposalBuilder.addContractAction(idleRAI, "setAllAvailableTokensAndWrappers", [
     protocolTokens,      // protocolTokens
     wrappers,            // wrappers
     govTokens,           // _newGovTokens
     govTokensEqualLength // _newGovTokensEqualLen
   ]);
+
+  // setAToken
+  proposalBuilder = proposalBuilder.addContractAction(idleRAI, "setAToken", [addresses.aRAI.live]);
 
   // updateFeedETH
   const priceOracle = await hre.ethers.getContractAt(PRICE_ORACLE_ABI, addresses.priceOracleV1);
@@ -101,19 +107,18 @@ export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
 
   const weth = await hre.ethers.getContractAt(ERC20_ABI, addresses.WETH.live);
   const comp = await hre.ethers.getContractAt(ERC20_ABI, addresses.COMP.live);
-  const usdc = await hre.ethers.getContractAt(ERC20_ABI, addresses.USDC.live);
   const idle = await hre.ethers.getContractAt(ERC20_ABI, addresses.IDLE);
   const stkAAVE = await hre.ethers.getContractAt(ERC20_ABI, addresses.stkAAVE.live);
 
   // Tokens from FeeTreasury to treasuryMultisig
   const transfers: any = [
-    // some WETH from feeTreasury
+    // 7.55 WETH from feeTreasury
     {
       token: addresses.WETH.live,
       contract: feeTreasury,
       method: "transfer",
       to: addresses.devLeagueMultisig,
-      value: toBN("1000000000000000000"), // TODO: set real value
+      value: toBN("755").mul(toBN("10").pow(toBN("16"))),
     },
     // all COMP from feeTreasury
     {
@@ -122,14 +127,6 @@ export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
       method: "transfer",
       to: addresses.devLeagueMultisig,
       value: await comp.balanceOf(addresses.feeTreasury),
-    },
-    // all USDC from feeTreasury
-    {
-      token: addresses.USDC.live,
-      contract: feeTreasury,
-      method: "transfer",
-      to: addresses.devLeagueMultisig,
-      value: await usdc.balanceOf(addresses.feeTreasury),
     },
     // all stkAAVE from feeCollector
     {
@@ -158,9 +155,8 @@ export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
     proposalBuilder.addContractAction(t.contract, t.method, [t.token, t.to, t.value]);
   }
 
-
   // Proposal
-  proposalBuilder.setDescription("IIP-12 TODO");
+  proposalBuilder.setDescription(iipDescription);
   const proposal = proposalBuilder.build()
   await proposal.printProposalInfo();
 
@@ -235,11 +231,17 @@ export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
   // IDLE added as gov token
   const newGovTokens = (await idleRAI.getGovTokens()).map((a: string) => a.toLowerCase());
   if (newGovTokens.includes(addresses.IDLE.toLowerCase())) {
-    console.log("✅ Verified that IDLE is added as gov token");
+    console.log("✅ Verified that IDLE has been added as gov token");
   } else {
     console.log("🚨🚨 ERROR!!! IdleRAI doens't have IDLE as gov token");
   }
 
+  // stkAAVE added as gov token
+  if (newGovTokens.includes(addresses.stkAAVE.live.toLowerCase())) {
+    console.log("✅ Verified that stkAAVE has been added as gov token");
+  } else {
+    console.log("🚨🚨 ERROR!!! IdleRAI doens't have stkAAVE as gov token");
+  }
 
   const newProtocolTokens = [...(await idleRAI.getAPRs())["0"]].map(x => x.toLowerCase());
   let creamTokenFound = false;
@@ -275,11 +277,16 @@ export default task("iip-12", "Deploy IIP 11 to Disable AAVE v1", async(_, hre) 
   }
 
   // Test Idle Token
-  console.log("creamTokenIndex", creamTokenIndex);
   let allocationsSpread = currentProtocolTokens.map(() => parseInt((100000 / currentProtocolTokens.length).toFixed(0)))
   allocationsSpread = [...allocationsSpread.slice(0, creamTokenIndex), ...allocationsSpread.slice(creamTokenIndex + 1)];
   const diff = 100000 - allocationsSpread.reduce((p, c) => p + c); // check for rounding errors
   allocationsSpread[0] = allocationsSpread[0] + diff;
   console.log('allocationsSpread', allocationsSpread.map(a => a.toString()));
-  await hre.run("test-idle-token", {idleToken: idleRAI, allocations: allocationsSpread, unlent: 0, whale: '0x9fd73e943a1e80d4cb33aa0cc81d8da148824d44'})
+  await hre.run("test-idle-token", {
+    idleToken: idleRAI,
+    allocations: allocationsSpread,
+    unlent: 0,
+    whale: '0x9fd73e943a1e80d4cb33aa0cc81d8da148824d44',
+    govTokens: [addresses.IDLE, addresses.stkAAVE.live],
+  })
 });
