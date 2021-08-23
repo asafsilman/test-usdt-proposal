@@ -40,13 +40,24 @@ export default task("iip-12", iipDescription, async(_, hre) => {
       continue;
     }
 
+    if (token == addresses.aRAI.live.toLowerCase()) {
+      govTokensEqualLength.push(addresses.stkAAVE.live.toLowerCase());
+    } else {
+      govTokensEqualLength.push(govToken);
+    }
+
     protocolTokens.push(token);
     wrappers.push(wrapper);
-    govTokensEqualLength.push(govToken)
   }
 
   if (creamTokenIndex < 0) {
     throw("CREAM TOKEN NOT FOUND");
+  }
+
+  if (govTokensEqualLength.includes(addresses.stkAAVE.live.toLowerCase())) {
+    console.log("✅ Verified that stkAAVE has been associated as gov token of aRAI");
+  } else {
+    throw("🚨🚨 ERROR!!! govTokensEqualLength doesn't contain stkAAVE");
   }
 
   if (isLocalNet) {
