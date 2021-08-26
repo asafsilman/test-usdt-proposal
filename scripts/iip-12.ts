@@ -95,10 +95,14 @@ export default task("iip-12", iipDescription, async(_, hre) => {
     govTokensEqualLength // _newGovTokensEqualLen
   ]);
 
-  // updateFeedETH
-  const priceOracle = await hre.ethers.getContractAt(PRICE_ORACLE_ABI, addresses.priceOracleV1);
   const raiEthPriceFeed = "0x4ad7B025127e89263242aB68F0f9c4E5C033B489";
-  proposalBuilder = proposalBuilder.addContractAction(priceOracle, "updateFeedETH", [addresses.RAI.live, raiEthPriceFeed]);
+  // updateFeedETH priceOracleV1
+  const priceOracleV1 = await hre.ethers.getContractAt(PRICE_ORACLE_ABI, addresses.priceOracleV1);
+  proposalBuilder = proposalBuilder.addContractAction(priceOracleV1, "updateFeedETH", [addresses.RAI.live, raiEthPriceFeed]);
+
+  // updateFeedETH priceOracleV2
+  const priceOracleV2 = await hre.ethers.getContractAt(PRICE_ORACLE_ABI, addresses.priceOracleV2.live);
+  proposalBuilder = proposalBuilder.addContractAction(priceOracleV2, "updateFeedETH", [addresses.RAI.live, raiEthPriceFeed]);
 
   // add IdleRAI market
   const idleController = await hre.ethers.getContractAt(IDLE_CONTROLLER_ABI, addresses.idleController);
@@ -128,14 +132,6 @@ export default task("iip-12", iipDescription, async(_, hre) => {
       to: addresses.devLeagueMultisig,
       value: toBN("755").mul(toBN("10").pow(toBN("16"))),
     },
-    // all COMP from feeTreasury
-    {
-      token: addresses.COMP.live,
-      contract: feeTreasury,
-      method: "transfer",
-      to: addresses.devLeagueMultisig,
-      value: await comp.balanceOf(addresses.feeTreasury),
-    },
     // all stkAAVE from feeCollector
     {
       token: addresses.stkAAVE.live,
@@ -144,7 +140,7 @@ export default task("iip-12", iipDescription, async(_, hre) => {
       to: addresses.devLeagueMultisig,
       value: await stkAAVE.balanceOf(addresses.feeCollector),
     },
-    // 16183 from ecosystemFund
+    // 16183 IDLE from ecosystemFund
     {
       token: addresses.IDLE,
       contract: ecosystemFund,
@@ -200,21 +196,26 @@ export default task("iip-12", iipDescription, async(_, hre) => {
 
   console.log("Testing...");
 
-  // RAI price from PriceOracleV2
-  const raiPriceInETH = await priceOracle.getPriceETH(addresses.RAI.live);
-  const raiPriceInUSDC = await priceOracle.getPriceToken(addresses.RAI.live, addresses.USDC.live);
-  console.log("raiPriceInETH", raiPriceInETH.toString());
-  console.log("raiPriceInUSDC", raiPriceInUSDC.toString());
-  if (!raiPriceInETH.gt(toBN("0"))) {
-    console.log("🚨🚨 ERROR!!! raiPriceInETH is 0");
-  } else {
-    console.log("✅ raiPriceInETH is > 0")
-  }
+  // RAI price from PriceOracle
+  const priceOracles = [priceOracleV1, priceOracleV2];
+  for (let i = 0; i < priceOracles.length; i++) {
+    console.log(`checking prices with price oracle v${i + 1}`);
+    const priceOracle = priceOracles[i];
+    const raiPriceInETH = await priceOracleV1.getPriceETH(addresses.RAI.live);
+    const raiPriceInUSDC = await priceOracleV1.getPriceToken(addresses.RAI.live, addresses.USDC.live);
+    console.log("raiPriceInETH", raiPriceInETH.toString());
+    console.log("raiPriceInUSDC", raiPriceInUSDC.toString());
+    if (!raiPriceInETH.gt(toBN("0"))) {
+      console.log("🚨🚨 ERROR!!! raiPriceInETH is 0");
+    } else {
+      console.log("✅ raiPriceInETH is > 0")
+    }
 
-  if (!raiPriceInUSDC.gt(toBN("0"))) {
-    console.log("🚨🚨 ERROR!!! raiPriceInUSDC is 0");
-  } else {
-    console.log("✅ raiPriceInUSDC is > 0")
+    if (!raiPriceInUSDC.gt(toBN("0"))) {
+      console.log("🚨🚨 ERROR!!! raiPriceInUSDC is 0");
+    } else {
+      console.log("✅ raiPriceInUSDC is > 0")
+    }
   }
 
   // IdleRAI speed
@@ -292,12 +293,11 @@ export default task("iip-12", iipDescription, async(_, hre) => {
   allocationsSpread = [...allocationsSpread.slice(0, creamTokenIndex), ...allocationsSpread.slice(creamTokenIndex + 1)];
   const diff = 100000 - allocationsSpread.reduce((p, c) => p + c); // check for rounding errors
   allocationsSpread[0] = allocationsSpread[0] + diff;
-  console.log('allocationsSpread', allocationsSpread.map(a => a.toString()));
   await hre.run("test-idle-token", {
     idleToken: idleRAI,
     allocations: allocationsSpread,
     unlent: 0,
-    whale: '0x9fd73e943a1e80d4cb33aa0cc81d8da148824d44',
+    whale: '0x26da854f28f2181858ce4aad1cdb0c2027b6465c',
     govTokens: [addresses.IDLE, addresses.stkAAVE.live],
   })
 });
