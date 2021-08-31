@@ -13,6 +13,7 @@ export default task("iip-upgrade", "Generic iip to upgrade Idle tokens")
   .addParam("initMethod", "The method to call with upgradeAndCall", "")
   .addParam("initSig", "The method signature to call with upgradeAndCall", "")
   .addParam("execute", "Execute or return proposal", false, types.boolean)
+  .addParam("fullSimulation", "Full proposal simulation", false, types.boolean, true)
   .setAction(async(args, hre) => {
 
   const isLocalNet = hre.network.name == 'hardhat';
@@ -64,7 +65,8 @@ export default task("iip-upgrade", "Generic iip to upgrade Idle tokens")
     await hre.network.provider.send("hardhat_setBalance", [WHALE_ADDRESS, "0xffffffffffffffff"]);
     proposal.setProposer(signer);
     // To run full simulation, set the flag for simulate to `true`
-    await proposal.simulate();
+    console.log("fullSimulation: ", args.fullSimulation);
+    await proposal.simulate(args.fullSimulation);
     console.log("Proposal simulated :)");
     console.log();
   } else {

@@ -49,6 +49,7 @@ export default task("example-upgrade", "Example using the iip-upgrade task", asy
     initMethod: "testInit",
     initSig: "testInit()",
     execute: true,
+    fullSimulation: true,
   });
 
   for (let i = 0; i < idleTokens.length; i++) {
