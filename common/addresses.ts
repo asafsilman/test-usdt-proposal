@@ -553,9 +553,21 @@ const allIdleTokens = [
   idleTUSDV4,
   idleWBTCV4,
   idleWETHV4,
+  idleRAIV4,
   idleDAISafeV4,
   idleUSDCSafeV4,
   idleUSDTSafeV4,
+];
+
+const allIdleTokensBest = [
+  idleDAIV4,
+  idleUSDCV4,
+  idleUSDTV4,
+  idleSUSDV4,
+  idleTUSDV4,
+  idleWBTCV4,
+  idleWETHV4,
+  idleRAIV4,
 ];
 
 const minimalInitializableProxyFactory = {
@@ -665,6 +677,7 @@ module.exports = {
   proxyAdmin: proxyAdmin,
   proxyAdminETH: proxyAdminETH,
   allIdleTokens: allIdleTokens,
+  allIdleTokensBest: allIdleTokensBest,
   aaveAddressesProvider: {
     'mainnet': '0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5',
     'mumbai': '0x178113104fEcbcD7fF8669a0150721e231F0FD4B',
