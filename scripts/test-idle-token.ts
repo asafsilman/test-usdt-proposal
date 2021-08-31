@@ -1,7 +1,8 @@
 import { BigNumber, Contract } from "ethers";
 import { task } from "hardhat/config"
 
-const addresses = require("./addresses")
+const ERC20_ABI = require("../abi/ERC20.json")
+const addresses = require("../common/addresses")
 const toBN = function(v: any): BigNumber { return BigNumber.from(v.toString()) };
 
 export default task("test-idle-token", "Test an idleToken by doing a rebalance", async (args: any, hre) => {
@@ -15,7 +16,7 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
     }
 
     let unlent = args.unlent || 0;
-    let whale = args.whale || '';
+    let whale = args.whale;
     let idleToken = args.idleToken.connect(rebalancer)
     let allocations = args.allocations;
 
@@ -81,7 +82,7 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
       const tokenDecimals = await underlyingContract.decimals();
       const oneToken = toBN(`10`).pow(tokenDecimals);
 
-      const whale = addresses.whale;
+      whale = whale || addresses.whale;
       const whaleSigner = await hre.ethers.getSigner(whale);
       await hre.ethers.provider.send("hardhat_setBalance", [whale, "0xffffffffffffffff"])
       await hre.network.provider.request({
@@ -93,12 +94,35 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
       await underlyingContract.connect(whaleSigner).transfer(account.address, amount);
       await underlyingContract.connect(account).approve(idleToken.address, amount);
       await idleToken.connect(account).mintIdleToken(amount, true, addresses.addr0);
-      console.log("IDLE balance before", (await idleContract.balanceOf(account.address)).toString());
+
+      const govTokens = args.govTokens || [];
+      const govTokensBalances: any = {};
+      for (let i = 0; i < govTokens.length; i++) {
+        const address = govTokens[i];
+        const token = await hre.ethers.getContractAt(ERC20_ABI, address)
+        govTokensBalances[address] = {
+          token: token,
+          tokenName: await token.name(),
+          balanceBefore: await idleContract.balanceOf(account.address),
+        }
+      }
 
       await waitBlocks(1000);
       const balance = await idleToken.balanceOf(account.address);
       await idleToken.connect(account).redeemIdleToken(balance);
-      console.log("IDLE balance after", (await idleContract.balanceOf(account.address)).toString());
+
+      for (const address in govTokensBalances) {
+        const data = govTokensBalances[address];
+        const balanceAfter = await data.token.balanceOf(account.address);
+        console.log(`${data.tokenName} balance before`, data.balanceBefore.toString());
+        console.log(`${data.tokenName} balance after `, balanceAfter.toString());
+
+        if (balanceAfter.gt(data.balanceBefore)) {
+          console.log(`✅ gov token ${data.tokenName} balance increased correctly\n`);
+        } else {
+          console.log(`🚨🚨 ERROR!!! gov token ${data.tokenName} balance didn't increase\n`);
+        }
+      }
     }
 
     if (!args.isSafe) {
