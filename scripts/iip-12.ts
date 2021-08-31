@@ -50,6 +50,10 @@ export default task("iip-12", iipDescription, async(_, hre) => {
     wrappers.push(wrapper);
   }
 
+  govTokens.push(addresses.stkAAVE.live);
+  govTokens.push(addresses.IDLE);
+
+
   if (creamTokenIndex < 0) {
     throw("CREAM TOKEN NOT FOUND");
   }
@@ -83,9 +87,6 @@ export default task("iip-12", iipDescription, async(_, hre) => {
   if(!currentAllocations[creamTokenIndex].eq(toBN("0"))) {
     throw("CREAM ALLOCATION MUST BE ZERO BEFORE RUNNING THIS PROPOSAL");
   }
-
-  govTokens.push(addresses.stkAAVE.live);
-  govTokens.push(addresses.IDLE);
 
   // setAllAvailableTokensAndWrappers
   proposalBuilder = proposalBuilder.addContractAction(idleRAI, "setAllAvailableTokensAndWrappers", [
