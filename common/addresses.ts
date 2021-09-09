@@ -570,6 +570,12 @@ const allIdleTokensBest = [
   idleRAIV4,
 ];
 
+const allIdleTokensSafe = [
+  idleDAISafeV4,
+  idleUSDCSafeV4,
+  idleUSDTSafeV4,
+];
+
 const minimalInitializableProxyFactory = {
   "mainnet": "0x91baced76e3e327ba7850ef82a7a8251f6e43fb8",
   "local": "0x91baced76e3e327ba7850ef82a7a8251f6e43fb8",
@@ -678,6 +684,7 @@ module.exports = {
   proxyAdminETH: proxyAdminETH,
   allIdleTokens: allIdleTokens,
   allIdleTokensBest: allIdleTokensBest,
+  allIdleTokensSafe: allIdleTokensSafe,
   aaveAddressesProvider: {
     'mainnet': '0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5',
     'mumbai': '0x178113104fEcbcD7fF8669a0150721e231F0FD4B',
