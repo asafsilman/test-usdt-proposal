@@ -7,6 +7,7 @@ require('dotenv').config()
 import "./scripts/iip-11"
 import "./scripts/iip-12"
 import "./scripts/iip-13"
+import "./scripts/iip-14"
 import "./scripts/iip-upgrade"
 import "./scripts/test-idle-token"
 import "./scripts/example-upgrade"
