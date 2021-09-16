@@ -70,8 +70,6 @@ export default task("iip-12", iipDescription, async(_, hre) => {
     await hre.network.provider.send("hardhat_setBalance", [addresses.timelock, "0xffffffffffffffff"]);
     await hre.network.provider.send("hardhat_impersonateAccount", [addresses.timelock]);
     const timelock = await hre.ethers.getSigner(addresses.timelock);
-    const allocations = [toBN("50000"), toBN("50000"), toBN("50000")];
-    allocations[creamTokenIndex] = toBN("0");
     await idleRAI.connect(timelock).setAllocations([toBN("0"), toBN("50000"), toBN("50000")]);
     await idleRAI.connect(timelock).rebalance();
   }
@@ -130,15 +128,15 @@ export default task("iip-12", iipDescription, async(_, hre) => {
       token: addresses.WETH.live,
       contract: feeTreasury,
       method: "transfer",
-      to: addresses.devLeagueMultisig,
-      value: toBN("755").mul(toBN("10").pow(toBN("16"))),
+      to: addresses.treasuryMultisig,
+      value: toBN("787").mul(toBN("10").pow(toBN("16"))),
     },
     // all stkAAVE from feeCollector
     {
       token: addresses.stkAAVE.live,
       contract: feeCollector,
       method: "withdraw",
-      to: addresses.devLeagueMultisig,
+      to: addresses.treasuryMultisig,
       value: await stkAAVE.balanceOf(addresses.feeCollector),
     },
     // 16183 IDLE from ecosystemFund
@@ -146,7 +144,7 @@ export default task("iip-12", iipDescription, async(_, hre) => {
       token: addresses.IDLE,
       contract: ecosystemFund,
       method: "transfer",
-      to: addresses.devLeagueMultisig,
+      to: addresses.treasuryMultisig,
       value: toBN("16183").mul(toBN("10").pow(toBN("18"))),
     },
   ];
