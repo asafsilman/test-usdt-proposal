@@ -18,10 +18,12 @@ const iipDescription = "IIP-14 Remove IDLE gov token from safe Idle tokens";
 export default task("iip-14", iipDescription, async(_, hre) => {
   const isLocalNet = hre.network.name == 'hardhat';
 
+  const idleTokens = addresses.allIdleTokensSafe;
+
   let proposalBuilder = hre.proposals.builders.alpha();
 
-  for (let tokenIndex = 0; tokenIndex < addresses.allIdleTokensSafe.length; tokenIndex++) {
-    const idleToken = await hre.ethers.getContractAt(IDLE_TOKEN_SAFE_ABI, addresses.allIdleTokensSafe[tokenIndex]);
+  for (let tokenIndex = 0; tokenIndex < idleTokens.length; tokenIndex++) {
+    const idleToken = await hre.ethers.getContractAt(IDLE_TOKEN_SAFE_ABI, idleTokens[tokenIndex]);
     const idleTokenName = await idleToken.name();
     console.log(`📄 adding proposal action for ${idleTokenName}`);
     const currentProtocolTokens = [...(await idleToken.getAPRs())["0"]].map(x => x.toLowerCase())
@@ -70,8 +72,9 @@ export default task("iip-14", iipDescription, async(_, hre) => {
   }
 
   console.log("Testing...");
-  for (let tokenIndex = 0; tokenIndex < addresses.allIdleTokensSafe.length; tokenIndex++) {
-    const idleToken = await hre.ethers.getContractAt(IDLE_TOKEN_SAFE_ABI, addresses.allIdleTokensSafe[tokenIndex]);
+
+  for (let tokenIndex = 0; tokenIndex < idleTokens.length; tokenIndex++) {
+    const idleToken = await hre.ethers.getContractAt(IDLE_TOKEN_SAFE_ABI, idleTokens[tokenIndex]);
     const idleTokenName = await idleToken.name();
     const govToken = await idleToken.govTokens(0);
     // console.log("***", govToken)
@@ -80,5 +83,17 @@ export default task("iip-14", iipDescription, async(_, hre) => {
     } else {
       console.log(`🚨🚨 ${idleTokenName} govToken 0 is NOT COMP`)
     }
+  }
+
+  for (let tokenIndex = 0; tokenIndex < idleTokens.length; tokenIndex++) {
+    const idleToken = await hre.ethers.getContractAt(IDLE_TOKEN_SAFE_ABI, idleTokens[tokenIndex]);
+    const idleTokenName = await idleToken.name();
+    console.log(`Testing ${idleTokenName}...`)
+    const currentProtocolTokens = [...(await idleToken.getAPRs())["0"]].map(x => x.toLowerCase())
+    const allocationsSpread = currentProtocolTokens.map(() => parseInt((100000 / currentProtocolTokens.length).toFixed(0)))
+    const diff = 100000 - allocationsSpread.reduce((p, c) => p + c); // check for rounding errors
+    allocationsSpread[0] = allocationsSpread[0] + diff;
+    console.log('allocationsSpread', allocationsSpread.map(a => a.toString()))
+    await hre.run("test-idle-token", {idleToken: idleToken, allocations: allocationsSpread, unlent: 0, whale: '', isSafe: true})
   }
 });
