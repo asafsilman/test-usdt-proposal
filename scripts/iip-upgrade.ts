@@ -37,7 +37,7 @@ export default task("iip-upgrade", "Generic iip to upgrade Idle tokens")
     } else {
       const abi = [`function ${initSig}`];
       const iface = new hre.ethers.utils.Interface(abi);
-      const initMethodCall = iface.encodeFunctionData(initMethod, [])
+      const initMethodCall = iface.encodeFunctionData(initMethod, args.initParams || [])
 
       proposalBuilder = proposalBuilder.addContractAction(proxyAdmin, "upgradeAndCall", [
         idleTokenAddress,
