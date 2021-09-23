@@ -1,5 +1,7 @@
 import { task } from "hardhat/config"
+import { FormatTypes, FunctionFragment, hexDataSlice } from "ethers/lib/utils";
 
+const IDLE_TOKEN_ABI = require("../abi/IdleTokenGovernance.json")
 const ProxyAdminABI = require("../abi/ProxyAdmin.json")
 const IdleTokenABI = require("../abi/IdleTokenGovernance.json")
 const addresses = require("../common/addresses")
@@ -11,7 +13,6 @@ export default task("iip-upgrade", "Generic iip to upgrade Idle tokens")
   .addParam("description", "The proposal description")
   .addParam("implementation", "The new implementation address")
   .addParam("initMethod", "The method to call with upgradeAndCall", "")
-  .addParam("initSig", "The method signature to call with upgradeAndCall", "")
   .addParam("execute", "Execute or return proposal", false, types.boolean)
   .addParam("fullSimulation", "Full proposal simulation", false, types.boolean, true)
   .setAction(async(args, hre) => {
@@ -19,7 +20,6 @@ export default task("iip-upgrade", "Generic iip to upgrade Idle tokens")
   const isLocalNet = hre.network.name == 'hardhat';
   const newImplementationAddress = args.implementation;
   const initMethod = args.initMethod;
-  const initSig = args.initSig;
   const proposalDescription = args.description;
 
   const idleTokens = addresses.allIdleTokensBest;
@@ -29,15 +29,16 @@ export default task("iip-upgrade", "Generic iip to upgrade Idle tokens")
 
   for (let i = 0; i < idleTokens.length; i++) {
     const idleTokenAddress = idleTokens[i];
-    if (initSig == "") {
+    const contract = await hre.ethers.getContractAt(IDLE_TOKEN_ABI, idleTokenAddress);
+    if (initMethod == undefined || initMethod == null || initMethod == "") {
       proposalBuilder = proposalBuilder.addContractAction(proxyAdmin, "upgrade", [
         idleTokenAddress,
         newImplementationAddress,
       ]);
     } else {
-      const abi = [`function ${initSig}`];
-      const iface = new hre.ethers.utils.Interface(abi);
-      const initMethodCall = iface.encodeFunctionData(initMethod, args.initParams || [])
+      const functionFragment: FunctionFragment = contract.interface.getFunction(initMethod);
+      const initSig = functionFragment.format(FormatTypes.sighash);
+      const initMethodCall = contract.interface.encodeFunctionData(functionFragment, args.initParams || []);
 
       proposalBuilder = proposalBuilder.addContractAction(proxyAdmin, "upgradeAndCall", [
         idleTokenAddress,

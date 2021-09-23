@@ -14,19 +14,16 @@ const iipDescription = "Upgrade implementations calling setOraclePrice";
 export default task("iip-13", iipDescription, async(_, hre) => {
   const isLocalNet = hre.network.name == 'hardhat';
 
-  const newImplementationAddress = "0xb776dd8f1f86c78260f9a43920cbc72d78de322c";
+  const newImplementationAddress = undefined;
   const priceOracleV3Address = "0x758C10272A15f0E9D50Cbc035ff9a046945da0F2";
   const idleTokens = addresses.allIdleTokensBest;
-  const IdleTokenGovernance = await hre.ethers.getContractFactory("IdleTokenGovernance");
-
 
   // upgradeAndCall
   let proposalBuilder = await hre.run("iip-upgrade", {
     description: iipDescription,
     implementation: newImplementationAddress,
-    initMethod: "setOracleAddress",
-    initSig: "setOracleAddress(address)",
-    initParams: [priceOracleV3Address],
+    initMethod: "_init",
+    initParams: [],
     execute: false,
   });
 
@@ -59,9 +56,9 @@ export default task("iip-13", iipDescription, async(_, hre) => {
 
   const currentControllerOracle = await idleController.oracle();
   if (currentControllerOracle.toLowerCase() == priceOracleV3Address.toLowerCase()) {
-    console.log(`✅ oracle updated correctly`);
+    console.log(`✅ idleController: oracle updated correctly`);
   } else {
-    console.log(`🚨🚨 ERROR!!! wrong oracle address ${currentControllerOracle}`);
+    console.log(`🚨🚨 idleController: ERROR!!! wrong oracle address ${currentControllerOracle}`);
   }
 
   for (let i = 0; i < idleTokens.length; i++) {
