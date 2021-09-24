@@ -82,7 +82,27 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
       const tokenDecimals = await underlyingContract.decimals();
       const oneToken = toBN(`10`).pow(tokenDecimals);
 
-      whale = whale || addresses.whale;
+      if (!whale) {
+        switch(underlying.toLowerCase()) {
+          case addresses.SUSD.live.toLowerCase():
+            whale = addresses.SUSDwhale;
+            break;
+          case addresses.TUSD.live.toLowerCase():
+            whale = addresses.TUSDwhale;
+            break;
+          case addresses.WETH.live.toLowerCase():
+            whale = addresses.WETHwhale;
+            break;
+          case addresses.WBTC.live.toLowerCase():
+            whale = addresses.WBTCwhale;
+            break;
+          case addresses.RAI.live.toLowerCase():
+            whale = addresses.RAIwhale;
+            break;
+          default:
+            whale = addresses.whale;
+        }
+      }
       const whaleSigner = await hre.ethers.getSigner(whale);
       await hre.ethers.provider.send("hardhat_setBalance", [whale, "0xffffffffffffffff"])
       await hre.network.provider.request({

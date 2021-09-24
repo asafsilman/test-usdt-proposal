@@ -14,7 +14,7 @@ const iipDescription = "Upgrade implementations calling setOraclePrice";
 export default task("iip-13", iipDescription, async(_, hre) => {
   const isLocalNet = hre.network.name == 'hardhat';
 
-  const newImplementationAddress = undefined;
+  const newImplementationAddress = "0xEa091ed7146e2c3CF3AC11FA296e206E55177B30";
   const priceOracleV3Address = "0x758C10272A15f0E9D50Cbc035ff9a046945da0F2";
   const idleTokens = addresses.allIdleTokensBest;
 
@@ -70,5 +70,14 @@ export default task("iip-13", iipDescription, async(_, hre) => {
     } else {
       console.log(`🚨🚨 ERROR!!! wrong oracle address ${currentOracle}`)
     }
+
+    // Test rebalances
+    // Spread funds between all protocols
+    let currentProtocolTokens = [...(await idleToken.getAPRs())["0"]].map(x=>x.toLowerCase())
+    const allocationsSpread = currentProtocolTokens.map(() => parseInt((100000 / currentProtocolTokens.length).toFixed(0)))
+    const diff = 100000 - allocationsSpread.reduce((p, c) => p + c); // check for rounding errors
+    allocationsSpread[0] = allocationsSpread[0] + diff;
+    console.log('allocationsSpread', allocationsSpread.map(a => a.toString()))
+    await hre.run("test-idle-token", {idleToken, allocations: allocationsSpread, unlent: 0, whale: ''})
   }
 });
