@@ -10,7 +10,7 @@ const addresses = require("../common/addresses")
 const ERC20_ABI = require("../abi/ERC20.json")
 const toBN = function(v: any): BigNumber { return BigNumber.from(v.toString()) };
 
-const iipDescription = "Upgrade implementations calling setOraclePrice";
+const iipDescription = "Upgrade implementations and upgrade oracle to v3";
 export default task("iip-13", iipDescription, async(_, hre) => {
   const isLocalNet = hre.network.name == 'hardhat';
 
