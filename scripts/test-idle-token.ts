@@ -130,7 +130,6 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
       await waitBlocks(1000);
       const balance = await idleToken.balanceOf(account.address);
       await idleToken.connect(account).redeemIdleToken(balance);
-
       for (const address in govTokensBalances) {
         const data = govTokensBalances[address];
         const balanceAfter = await data.token.balanceOf(account.address);

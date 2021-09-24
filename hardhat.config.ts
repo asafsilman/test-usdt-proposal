@@ -11,6 +11,7 @@ import "./scripts/iip-14"
 import "./scripts/iip-upgrade"
 import "./scripts/test-idle-token"
 import "./scripts/example-upgrade"
+import "./scripts/execute-proposal-or-simulate"
 
 const config: HardhatUserConfig = {
   solidity: "0.5.16",
