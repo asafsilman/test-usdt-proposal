@@ -955,6 +955,15 @@
     },
     {
       "constant": false,
+      "inputs": [],
+      "name": "_init",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
       "inputs": [
         {
           "internalType": "address[]",
@@ -978,21 +987,6 @@
         }
       ],
       "name": "setAllAvailableTokensAndWrappers",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_flashFee",
-          "type": "uint256"
-        }
-      ],
-      "name": "setFlashLoanFee",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -1540,4 +1534,3 @@
       "type": "function"
     }
   ]
-  
