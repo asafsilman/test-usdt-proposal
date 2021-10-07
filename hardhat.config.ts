@@ -15,6 +15,7 @@ import "./scripts/test-idle-token"
 import "./scripts/example-upgrade"
 import "./scripts/execute-proposal-or-simulate"
 import "./scripts/deploy-rebalancer-polygon"
+import "./scripts/upgrade-and-call-polygon"
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -25,6 +26,15 @@ const config: HardhatUserConfig = {
           optimizer: {
             enabled: true,
             runs: 25
+          }
+        }
+      },
+      {
+        version: "0.6.12",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200
           }
         }
       }
