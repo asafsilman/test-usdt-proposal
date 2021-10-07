@@ -5,7 +5,7 @@ import {SafeEthersSigner, SafeService} from "@gnosis.pm/safe-ethers-adapters"
 const addresses = require("../common/addresses");
 
 export default task("execute-proposal-or-simulate", "Test an idleToken by doing a rebalance", async (args: any, hre) => {
-    if (!args.proposal || !args.isLocalNet) {
+    if (!args.proposal) {
       console.log('Error proposal task arg');
       return;
     }
