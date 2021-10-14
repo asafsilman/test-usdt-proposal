@@ -14,8 +14,10 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
       console.log('Error missing task args');
       return;
     }
+    const accounts = await hre.ethers.getSigners();
 
     let unlent = args.unlent || 0;
+    let account = args.account || accounts[0];
     let whale = args.whale;
     let idleToken = args.idleToken.connect(rebalancer)
     let allocations = args.allocations;
@@ -47,9 +49,7 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
         console.log('# unlent balance: ', toBN(await underlyingContract.balanceOf(idleToken.address)).div(oneToken).toString());
         const tokens = (await idleToken.getAPRs())["0"];
         console.log("tokens", tokens.join(", "));
-        const idleTokenDecimals = toBN(await idleToken.decimals());
         const idleTokenName = await idleToken.name();
-        // const toIdleTokenUnit = v => v.div(toBN("10").pow(idleTokenDecimals));
         console.log("curr allocations", (await idleToken.getAllocations()).map((x: any) => x.toString()));
 
         let bn_allocations = allocations.map<BigNumber>(toBN);
@@ -75,7 +75,7 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
     }
 
     const mintAndRedeem = async (account: any) => {
-      console.log('#### Testing mint and redeem');
+      console.log('#### Testing mint and redeem for user: ', account.address);
       const underlying = await idleToken.token();
       const underlyingContract = await hre.ethers.getContractAt("IERC20Detailed", underlying);
       const idleContract = await hre.ethers.getContractAt("IERC20Detailed", addresses.IDLE);
@@ -153,7 +153,6 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
       }
     }
 
-    const accounts = await hre.ethers.getSigners();
     await setAllocationsAndRebalance(idleToken, allocations, unlent, whale);
-    await mintAndRedeem(accounts[0]);
+    await mintAndRedeem(account);
 })
