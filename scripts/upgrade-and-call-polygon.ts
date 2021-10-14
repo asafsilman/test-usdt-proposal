@@ -31,6 +31,14 @@ export default task("upgrade-and-call-polygon", "Deploy IIP 11 to Disable AAVE v
     let proxyAdmin = await hre.ethers.getContractAt((await hre.artifacts.readArtifact("IProxyAdmin")).abi, proxyAdminAddress);
     proxyAdmin = proxyAdmin.connect(signer);
 
+    // const oracleAddress = '0x12271d4Ba175F20Dd673218E780426158D0b0f07';
+    // const proxyAdminOracleAddress = "0x6F15DcBf4FB727eD77d85943F0e59ce4617aBCCf";
+    // let proxyAdminOracle = await hre.ethers.getContractAt((await hre.artifacts.readArtifact("IProxyAdmin")).abi, proxyAdminOracleAddress);
+    // proxyAdminOracle = proxyAdminOracle.connect(signer);
+    // await proxyAdminOracle.changeProxyAdmin(oracleAddress, proxyAdminAddress);
+    // console.log(await proxyAdmin.getProxyAdmin(oracleAddress))
+    // console.log(await proxyAdmin.getProxyImplementation(oracleAddress))
+
     const abi = [`function _init()`];
     const iface = new hre.ethers.utils.Interface(abi);
     const initMethodCall = iface.encodeFunctionData("_init", []);
