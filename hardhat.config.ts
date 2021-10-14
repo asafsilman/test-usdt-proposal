@@ -8,6 +8,7 @@ import "./scripts/iip-11"
 import "./scripts/iip-12"
 import "./scripts/iip-13"
 import "./scripts/iip-14"
+import "./scripts/iip-15"
 import "./scripts/iip-upgrade"
 import "./scripts/generic-test"
 import "./scripts/test-idle-token"
@@ -23,7 +24,8 @@ const config: HardhatUserConfig = {
         // blockNumber: 12725152, // iip-11
         // blockNumber: 13235728, // iip-12
         // blockNumber: 13334600, // iip-13
-        blockNumber: 13372333, // iip-14
+        // blockNumber: 13372333, // iip-14
+        blockNumber: 13416755, // iip-15
       },
       chainId: 1
     },
