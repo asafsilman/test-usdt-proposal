@@ -643,6 +643,12 @@ const maticIdleAaveV2DAI = "0xA2C19beA882cc0B1749361Ac56118486336c300f";
 const maticIdleAaveV2USDC = "0xa3734Ea6A5522d1eA24751ABED18232A1bfb8F59";
 const maticIdleAaveV2WETH = "0x8482946A24e83FE15732b88dB07eEeBFA8776b05";
 
+const allIdleTokensBestMatic = [
+  maticIdleDAIV4,
+  maticIdleUSDCV4,
+  maticIdleWETHV4,
+];
+
 const priceOracleV2 = {
   'live': '0xB5A8f07dD4c3D315869405d702ee8F6EA695E8C5',
   'matic': '0x27F06D00d73Ec426193473726BB0671267Fd27F0',
@@ -738,6 +744,7 @@ module.exports = {
   allIdleTokens: allIdleTokens,
   allIdleTokensBest: allIdleTokensBest,
   allIdleTokensSafe: allIdleTokensSafe,
+  allIdleTokensBestMatic: allIdleTokensBestMatic,
   aaveAddressesProvider: {
     'mainnet': '0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5',
     'live': '0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5',

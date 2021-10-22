@@ -37,7 +37,6 @@ export default task("iip-upgrade", "Generic iip to upgrade Idle tokens")
       ]);
     } else {
       const functionFragment: FunctionFragment = contract.interface.getFunction(initMethod);
-      const initSig = functionFragment.format(FormatTypes.sighash);
       const initMethodCall = contract.interface.encodeFunctionData(functionFragment, args.initParams || []);
 
       proposalBuilder = proposalBuilder.addContractAction(proxyAdmin, "upgradeAndCall", [
