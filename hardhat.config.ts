@@ -14,9 +14,32 @@ import "./scripts/generic-test"
 import "./scripts/test-idle-token"
 import "./scripts/example-upgrade"
 import "./scripts/execute-proposal-or-simulate"
+import "./scripts/deploy-rebalancer-polygon"
+import "./scripts/upgrade-and-call-polygon"
 
 const config: HardhatUserConfig = {
-  solidity: "0.5.16",
+  solidity: {
+    compilers: [
+      {
+        version: "0.5.16",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 25
+          }
+        }
+      },
+      {
+        version: "0.6.12",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200
+          }
+        }
+      }
+    ],
+  },
   networks: {
     hardhat: {
       forking: {
@@ -26,8 +49,12 @@ const config: HardhatUserConfig = {
         // blockNumber: 13334600, // iip-13
         // blockNumber: 13372333, // iip-14
         blockNumber: 13416755, // iip-15
+        // url: `https://polygon-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+        // blockNumber: 19645454,
       },
+      // chainId: 137,
       chainId: 1
+      // allowUnlimitedContractSize: true
     },
     mainnet: {
       url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
@@ -35,9 +62,12 @@ const config: HardhatUserConfig = {
       gas: 'auto',
       timeout: 1200000
     },
-    local: {
-      url: "http://127.0.0.1:8545/",
+    matic: {
+      url: `https://polygon-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+      gasPrice: 'auto',
+      gas: 'auto',
       timeout: 1200000,
+      chainId: 137
     }
   },
   proposals: {
