@@ -588,6 +588,7 @@ const IDLE = '0x875773784Af8135eA0ef43b5a374AaD105c5D39e';
 const timelock = '0xD6dABBc2b275114a2366555d6C481EF08FDC2556';
 const proxyAdmin = '0x7740792812A00510b50022D84e5c4AC390e01417';
 const proxyAdminETH = '0xc2ff102E62027DE1205a7EDd4C8a8F58C1E5e3e8';
+const proxyAdminPolygon = '0xCF8977156cc60a5c9bF32d44C143A60CDe6341c3';
 
 const allIdleTokensBest = [
   idleDAIV4,
@@ -771,6 +772,7 @@ module.exports = {
   maticIdleAaveV2WETH,
   idleCREAMImplementation,
   idleFUSEImplementation,
+  proxyAdminPolygon,
   polygonDev: '0xE5Dab8208c1F4cce15883348B72086dBace3e64B',
   addr0: '0x0000000000000000000000000000000000000000',
   idleController: '0x275DA8e61ea8E02d51EDd8d0DC5c0E62b4CDB0BE',
@@ -794,9 +796,11 @@ module.exports = {
   lastIdleTokenImplementation: '0xEa091ed7146e2c3CF3AC11FA296e206E55177B30',
   priceOracleV2: priceOracleV2,
   priceOracleV3: priceOracleV3,
+  priceOracleV3Matic: "0x12271d4Ba175F20Dd673218E780426158D0b0f07",
   mainnetProposer: '',
   deployer: '0xE5Dab8208c1F4cce15883348B72086dBace3e64B',
   feeTreasury: "0x69a62C24F16d4914a48919613e8eE330641Bcb94",
+  treasuryMultisigMatic: "0x61A944Ca131Ab78B23c8449e0A2eF935981D5cF6",
   treasuryMultisig: "0xFb3bD022D5DAcF95eE28a6B07825D4Ff9C5b3814",
   devLeagueMultisig: "0xe8eA8bAE250028a8709A3841E0Ae1a44820d677b",
   rebalancerHelper: '0x735a3792AC5655B21c0cae47D1c75184705dAA52',

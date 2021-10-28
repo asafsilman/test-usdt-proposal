@@ -2,9 +2,9 @@ import { BigNumber } from "ethers";
 import { task } from "hardhat/config"
 import { LedgerSigner } from "@ethersproject/hardware-wallets";
 import {SafeEthersSigner, SafeService} from "@gnosis.pm/safe-ethers-adapters"
-const IDLE_TOKEN_ABI = require("../abi/IdleTokenGovernance.json")
+const IDLE_TOKEN_ABI = require("../../abi/IdleTokenGovernance.json")
 
-const addrs = require("../common/addresses");
+const addrs = require("../../common/addresses");
 const addr0 = addrs.addr0;
 // const ERC20_ABI = require("../abi/ERC20.json")
 const toBN = function(v: any): BigNumber { return BigNumber.from(v.toString()) };
