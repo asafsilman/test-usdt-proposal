@@ -55,6 +55,11 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
         let bn_allocations = allocations.map<BigNumber>(toBN);
         console.log("new allocations", bn_allocations.toString());
 
+        await hre.network.provider.send("hardhat_setBalance", [addresses.timelock, "0xffffffffffffffff"]);
+        await hre.network.provider.send("hardhat_impersonateAccount", [addresses.timelock]);
+        const timelock = await hre.ethers.getSigner(addresses.timelock);
+        idleToken = idleToken.connect(timelock);
+
         await idleToken.setAllocations(bn_allocations);
         const newAllocations = await idleToken.getAllocations();
         console.log("done setting allocations for", idleTokenName, "-", newAllocations.join(", "));
@@ -98,6 +103,9 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
             break;
           case addresses.RAI.live.toLowerCase():
             whale = addresses.RAIwhale;
+            break;
+          case addresses.FEI.live.toLowerCase():
+            whale = addresses.FEIwhale;
             break;
           default:
             whale = addresses.whale;

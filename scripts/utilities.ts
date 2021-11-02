@@ -23,7 +23,6 @@ export default task("flash-liquidity", "fetch flash loan liquidity", async(_, hr
     const oneToken = toBN("10").pow(decimals);
     const tvl = await idleToken.maxFlashLoan(address);
     console.log(`📝 Fetching data for ${await idleToken.name()} (TVL: ${tvl.div(oneToken)})`);
-    
     // contract balance
     let flashLiquidity = toBN(await underlying.balanceOf(idleAddr));
     if (debug) {

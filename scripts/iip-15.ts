@@ -10,12 +10,13 @@ const IDLE_CONTROLLER_ABI = require("../abi/IdleController.json")
 const ERC20_ABI = require("../abi/ERC20.json")
 const toBN = function(v: any): BigNumber { return BigNumber.from(v.toString()) };
 
-const iipDescription = "IIP-15: Remove DyDx as lending provider \n";
+const iipDescription = "IIP-15: Remove DyDx and Cream. Add IDLE to idleFEI  \n https://gov.idle.finance/t/remove-cream-from-idlefei-pool/709 ; https://gov.idle.finance/t/enable-idle-liquidity-mining-on-idlefei/696 ; https://gov.idle.finance/t/dydx-deactivation/695";
 export default task("iip-15", iipDescription, async(_, hre) => {
   const isLocalNet = hre.network.name == 'hardhat';
   const idleTokens = [
-    {address: addresses.idleDAIV4, yxToken: addresses.yxDAI.live},
-    {address: addresses.idleUSDCV4, yxToken: addresses.yxUSDC.live}
+    {address: addresses.idleDAIV4, toRemove: addresses.yxDAI.live},
+    {address: addresses.idleUSDCV4, toRemove: addresses.yxUSDC.live},
+    {address: addresses.idleFEIV4, toRemove: addresses.crFEI.live}
   ];
 
   let proposalBuilder = hre.proposals.builders.alpha();
@@ -41,12 +42,12 @@ export default task("iip-15", iipDescription, async(_, hre) => {
     let govTokensEqualLength = []
     let govTokens = [];
 
-    let yxTokenIdx = currentProtocolTokens.indexOf(idleTokens[tokenIndex].yxToken.toLowerCase())
-    if (yxTokenIdx < 0) {
-      throw "COULD NOT FIND YXTOKEN";
+    let toRemoveIdx = currentProtocolTokens.indexOf(idleTokens[tokenIndex].toRemove.toLowerCase())
+    if (toRemoveIdx < 0) {
+      throw "COULD NOT FIND TOKEN TO REMOVE";
     }
 
-    if (isLocalNet) {
+    if (isLocalNet && idleToken.address.toLowerCase() != addresses.idleFEIV4.toLowerCase()) {
       console.log("local network, rebalancing...");
       await hre.network.provider.send("hardhat_setBalance", [addresses.timelock, "0xffffffffffffffff"]);
       await hre.network.provider.send("hardhat_impersonateAccount", [addresses.timelock]);
@@ -55,26 +56,26 @@ export default task("iip-15", iipDescription, async(_, hre) => {
       await idleToken.connect(timelock).rebalance();
     }
 
-    const yxToken = await hre.ethers.getContractAt(ERC20_ABI, idleTokens[tokenIndex].yxToken);
-    const bal = await yxToken.balanceOf(idleToken.address);
+    const toRemove = await hre.ethers.getContractAt(ERC20_ABI, idleTokens[tokenIndex].toRemove);
+    const bal = await toRemove.balanceOf(idleToken.address);
     if (bal.gt(toBN("10"))) {
-      throw(`IdleFEI still has a balance in yxToken. Balance: ${bal.toString()}`);
+      throw(`IdleToken still has a balance in. Balance: ${bal.toString()}`);
     } else {
-      console.log(`✅ Verified that IdleFEI has no yxToken balance. (${bal.toString()})`);
+      console.log(`✅ Verified that IdleToken has no balance. (${bal.toString()})`);
     }
     const currentAllocations = await idleToken.getAllocations();
-    if(!currentAllocations[yxTokenIdx].eq(toBN("0"))) {
-      throw("DYDX ALLOCATION MUST BE ZERO BEFORE RUNNING THIS PROPOSAL");
+    if(!currentAllocations[toRemoveIdx].eq(toBN("0"))) {
+      throw("PROTOCOL ALLOCATION MUST BE ZERO BEFORE RUNNING THIS PROPOSAL");
     }
 
-    console.log(`Removing wrapper at index ${yxTokenIdx}`)
+    console.log(`Removing wrapper at index ${toRemoveIdx}`)
 
     for (var j = 0; j < currentProtocolTokens.length; j++) {
       const token = currentProtocolTokens[j];
       const wrapper = await idleToken.protocolWrappers(token);
       const govToken = await idleToken.getProtocolTokenToGov(token)
 
-      if (j == yxTokenIdx) {
+      if (j == toRemoveIdx) {
           console.log(`Removing wrapper @ ${wrapper} for token ${token}`)
           continue
       }
@@ -86,7 +87,8 @@ export default task("iip-15", iipDescription, async(_, hre) => {
       govTokensEqualLength.push(govToken);
     };
 
-    if (isIDLEDistributed) {
+    if (isIDLEDistributed || idleToken.address.toLowerCase() == addresses.idleFEIV4.toLowerCase()) {
+      console.log('Adding IDLE')
       govTokens.push(addresses.IDLE);
     }
 
@@ -132,6 +134,15 @@ export default task("iip-15", iipDescription, async(_, hre) => {
     console.log("✅ Verified that IdleFEI speed increased after proposal");
   }
 
+  // Test that idleFEI have IDLE govTokens
+  const idleToken = await hre.ethers.getContractAt(IDLE_TOKEN_ABI, addresses.idleFEIV4);
+  const govTokens = await idleToken.getGovTokens();
+  if (govTokens[0].toLowerCase() == addresses.IDLE.toLowerCase()) {
+    console.log("✅ Verified that IdleFEI have IDLE gov token");
+  } else {
+    console.log("🚨🚨 ERROR!!! IdleFEI have no IDLE");
+  }
+
   const accounts = await hre.ethers.getSigners();
   for (let tokenIndex = 0; tokenIndex < idleTokens.length; tokenIndex++) {
     const idleToken = await hre.ethers.getContractAt(IDLE_TOKEN_ABI, idleTokens[tokenIndex].address);
@@ -142,6 +153,12 @@ export default task("iip-15", iipDescription, async(_, hre) => {
     const diff = 100000 - allocationsSpread.reduce((p, c) => p + c); // check for rounding errors
     allocationsSpread[0] = allocationsSpread[0] + diff;
     console.log('allocationsSpread', allocationsSpread.map(a => a.toString()))
+
+    let govTokens = [addresses.COMP.live, addresses.stkAAVE.live, addresses.IDLE];
+    if (idleTokens[tokenIndex].address.toLowerCase() == addresses.idleFEIV4.toLowerCase()) {
+      govTokens = [addresses.IDLE];
+    }
+
     await hre.run("test-idle-token", {
       idleToken: idleToken,
       account: accounts[tokenIndex],
@@ -149,7 +166,7 @@ export default task("iip-15", iipDescription, async(_, hre) => {
       unlent: 0,
       whale: '',
       isSafe: false,
-      govTokens: [addresses.COMP.live, addresses.stkAAVE.live, addresses.IDLE]
+      govTokens
     })
   }
 });

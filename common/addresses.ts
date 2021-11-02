@@ -785,6 +785,7 @@ module.exports = {
   WETHwhale: '0xe78388b4ce79068e89bf8aa7f218ef6b9ab0e9d0',
   WBTCwhale: '0xe78388b4ce79068e89bf8aa7f218ef6b9ab0e9d0',
   RAIwhale: '0xeb2629a2734e272bcc07bda959863f316f4bd4cf',
+  FEIwhale: '0xbc9c084a12678ef5b516561df902fdc426d95483',
   forkProposer: '0x3675D2A334f17bCD4689533b7Af263D48D96eC72',
   bountyAddressForEB: '0x394495a3800d1504b5686d398836baefebd0c5b7',
   mintRedeemTestUser: '0xF1363D3D55d9e679cC6aa0a0496fD85BDfCF7464',
