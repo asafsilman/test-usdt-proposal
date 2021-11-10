@@ -11,7 +11,8 @@ export default task("iip-16", "Upgrade PriceOracle")
   const isLocalNet = hre.network.name == 'hardhat';
   const proxyAddr = addresses.priceOracleV3.live;
   const newImplementationAddress = "0x886b102953ab3eaf719df7b80b03cd5203c201f1";
-  console.log({ proxyAddr})
+  console.log({ proxyAddr })
+
   if (!newImplementationAddress || !proxyAddr) {
     throw 'Implementation and proxyAddr address must be set';
   }
@@ -40,11 +41,20 @@ export default task("iip-16", "Upgrade PriceOracle")
 
   // Test that the oracle returns the correct value for the new compSupplySpeed
   const oracle = await hre.ethers.getContractAt(OracleABI, proxyAddr);
-  const compSupplySpeed = await oracle.getCompApr(addresses.cDAI.live, addresses.DAI.live);
-  // Check that compSupplySpeed is greater than 0
-  if (compSupplySpeed.lt(0)) {
-    throw 'compSupplySpeed is less than 0';
-  } else {
-    console.log(`✅ compSupplySpeed is ${compSupplySpeed}`);
-  }
+
+  const checkCompApr = async (cToken: any, token: any) => {
+    // Check that Comp Apr is >= 0
+    const compApr = await oracle.getCompApr(cToken, token);
+    if (compApr.lte(0)) {
+      throw `compApr for ${token} is less than 0`;
+    } else {
+      console.log(`✅ compApr for ${token} is ${compApr}`);
+    }
+  };
+
+  await checkCompApr(addresses.cDAI.live, addresses.DAI.live);
+  await checkCompApr(addresses.cUSDC.live, addresses.USDC.live);
+  await checkCompApr(addresses.cUSDT.live, addresses.USDT.live);
+  await checkCompApr(addresses.cWBTCV2.live, addresses.WBTC.live);
+  await checkCompApr(addresses.cWETH.live, addresses.WETH.live);
 });
