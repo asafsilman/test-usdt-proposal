@@ -4,7 +4,7 @@ const ProxyAdminABI = require("../abi/ProxyAdmin.json")
 const addresses = require("../common/addresses")
 const OracleABI = require("../abi/PriceOracleV3.json")
 
-const iipDescription = "Upgrade PriceOracle to support new compSupplySpeeds";
+const iipDescription = "IIP-16: Upgrade PriceOracle to support new compSupplySpeeds \n https://gov.idle.finance/t/iip-16-priceoracle-upgrade/727";
 export default task("iip-16", "Upgrade PriceOracle")
   .setAction(async(_, hre) => {
 
