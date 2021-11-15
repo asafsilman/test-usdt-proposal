@@ -9,6 +9,7 @@ import "./scripts/iip-12"
 import "./scripts/iip-13"
 import "./scripts/iip-14"
 import "./scripts/iip-15"
+import "./scripts/iip-16"
 import "./scripts/iip-upgrade"
 import "./scripts/utilities"
 import "./scripts/test-idle-token"
@@ -48,7 +49,8 @@ const config: HardhatUserConfig = {
         // blockNumber: 13235728, // iip-12
         // blockNumber: 13334600, // iip-13
         // blockNumber: 13372333, // iip-14
-        blockNumber: 13536539, // iip-15
+        // blockNumber: 13543217, // iip-15
+        blockNumber: 13587540, // iip-16
 
         // url: `https://polygon-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
         // url: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,

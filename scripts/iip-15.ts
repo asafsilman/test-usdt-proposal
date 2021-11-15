@@ -1,6 +1,4 @@
 import { task } from "hardhat/config"
-import { LedgerSigner } from "@ethersproject/hardware-wallets";
-import {SafeEthersSigner, SafeService} from "@gnosis.pm/safe-ethers-adapters"
 import { BigNumber } from "ethers";
 
 const addresses = require("../common/addresses")

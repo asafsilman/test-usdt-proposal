@@ -141,13 +141,11 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
       for (const address in govTokensBalances) {
         const data = govTokensBalances[address];
         const balanceAfter = await data.token.balanceOf(account.address);
-        console.log(`${data.tokenName} balance before`, data.balanceBefore.toString());
-        console.log(`${data.tokenName} balance after `, balanceAfter.toString());
 
         if (balanceAfter.gt(data.balanceBefore)) {
-          console.log(`✅ gov token ${data.tokenName} balance increased correctly\n`);
+          console.log(`✅ gov token ${data.tokenName} balance increased correctly (${data.balanceBefore} -> ${balanceAfter})`);
         } else {
-          console.log(`🚨🚨 ERROR!!! gov token ${data.tokenName} balance didn't increase\n`);
+          console.log(`🚨🚨 ERROR!!! gov token ${data.tokenName} balance didn't increase (${data.balanceBefore} -> ${balanceAfter})`);
         }
       }
     }
