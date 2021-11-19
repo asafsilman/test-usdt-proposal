@@ -15,6 +15,7 @@ export default task("iip-upgrade", "Generic iip to upgrade Idle tokens")
   .addParam("initMethod", "The method to call with upgradeAndCall", "")
   .addParam("execute", "Execute or return proposal", false, types.boolean)
   .addParam("fullSimulation", "Full proposal simulation", false, types.boolean, true)
+  // .addParam("proposalBuilder", "", false, types.boolean, true)
   .setAction(async(args, hre) => {
 
   const isLocalNet = hre.network.name == 'hardhat';
@@ -25,7 +26,7 @@ export default task("iip-upgrade", "Generic iip to upgrade Idle tokens")
   const idleTokens = addresses.allIdleTokensBest;
   const proxyAdmin = await hre.ethers.getContractAt(ProxyAdminABI, addresses.proxyAdmin);
 
-  let proposalBuilder = hre.proposals.builders.alpha();
+  let proposalBuilder = args.proposalBuilder || hre.proposals.builders.alpha();
 
   for (let i = 0; i < idleTokens.length; i++) {
     const idleTokenAddress = idleTokens[i];
@@ -56,26 +57,5 @@ export default task("iip-upgrade", "Generic iip to upgrade Idle tokens")
   const proposal = proposalBuilder.build()
   await proposal.printProposalInfo();
 
-
-  if (isLocalNet) {
-    console.log("Simulating proposal")
-    const WHALE_ADDRESS = addresses.devLeagueMultisig;
-    await hre.network.provider.send("hardhat_impersonateAccount", [WHALE_ADDRESS]);
-    let signer = await hre.ethers.getSigner(WHALE_ADDRESS);
-    await hre.network.provider.send("hardhat_setBalance", [WHALE_ADDRESS, "0xffffffffffffffff"]);
-    proposal.setProposer(signer);
-    // To run full simulation, set the flag for simulate to `true`
-    console.log("fullSimulation: ", args.fullSimulation);
-    await proposal.simulate(args.fullSimulation);
-    console.log("Proposal simulated :)");
-    console.log();
-  } else {
-    console.log('Posting proposal on-chain with Dev League Multisig');
-    const ledgerSigner = new LedgerSigner(hre.ethers.provider, undefined, "m/44'/60'/0'/0/0");
-    const service = new SafeService('https://safe-transaction.gnosis.io/');
-    const signer = await SafeEthersSigner.create(addresses.devLeagueMultisig, ledgerSigner, service, hre.ethers.provider);
-    proposal.setProposer(signer);
-    await proposal.propose();
-    console.log("Proposal is live");
-  }
+  await hre.run('execute-proposal-or-simulate', {proposal, isLocalNet});
 });

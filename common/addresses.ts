@@ -589,7 +589,7 @@ const timelock = '0xD6dABBc2b275114a2366555d6C481EF08FDC2556';
 const proxyAdmin = '0x7740792812A00510b50022D84e5c4AC390e01417';
 const proxyAdminETH = '0xc2ff102E62027DE1205a7EDd4C8a8F58C1E5e3e8';
 const proxyAdminPolygon = '0xCF8977156cc60a5c9bF32d44C143A60CDe6341c3';
-
+const randomAddr = '0x000000000000000000000000000000000000dead'
 const allIdleTokensBest = [
   idleDAIV4,
   idleUSDCV4,
@@ -793,8 +793,8 @@ module.exports = {
   idleTokenHelper: idleTokenHelper,
   // up until 09/2021
   // lastIdleTokenImplementation: '0xb776dd8f1f86c78260f9a43920cbc72d78de322c',
-  // from end of 09/2021
-  lastIdleTokenImplementation: '0xEa091ed7146e2c3CF3AC11FA296e206E55177B30',
+  // from of 19/11/2021
+  lastIdleTokenImplementation: '0x577d963246d28dbe0dc579048adda421b054924a',
   priceOracleV2: priceOracleV2,
   priceOracleV3: priceOracleV3,
   priceOracleV3Matic: "0x12271d4Ba175F20Dd673218E780426158D0b0f07",
@@ -806,5 +806,7 @@ module.exports = {
   devLeagueMultisig: "0xe8eA8bAE250028a8709A3841E0Ae1a44820d677b",
   rebalancerHelper: '0x735a3792AC5655B21c0cae47D1c75184705dAA52',
   feeCollector: '0xBECC659BFC6EDCA552FA1A67451CC6B38A0108E4',
-  priceOracleV1: '0x972a64d108e250df98dbeac8170678501f5ef181'
+  priceOracleV1: '0x972a64d108e250df98dbeac8170678501f5ef181',
+  idleMultisig,
+  randomAddr
 };

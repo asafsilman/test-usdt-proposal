@@ -131,7 +131,7 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
         govTokensBalances[address] = {
           token: token,
           tokenName: await token.name(),
-          balanceBefore: await idleContract.balanceOf(account.address),
+          balanceBefore: await token.balanceOf(account.address),
         }
       }
 
