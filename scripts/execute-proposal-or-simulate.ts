@@ -21,7 +21,7 @@ export default task("execute-proposal-or-simulate", "Test an idleToken by doing 
       await hre.network.provider.send("hardhat_setBalance", [WHALE_ADDRESS, "0xffffffffffffffff"]);
       proposal.setProposer(signer);
       // To run full simulation, set the flag for simulate to `true`
-      await proposal.simulate();
+      await proposal.simulate(args.fullSimulation);
       console.log("Proposal simulated :)");
       console.log();
     } else {
