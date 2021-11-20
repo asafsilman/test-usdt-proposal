@@ -6,7 +6,7 @@ import { BigNumber } from "ethers";
 const toBN = function(v: any): BigNumber { return BigNumber.from(v.toString()) };
 const ProxyAdminABI = require("../abi/ProxyAdmin.json")
 
-const iipDescription = "IIP-17: Upgrade IdleTokenGovernance implementation to remove flash \n";
+const iipDescription = "IIP-17: Upgrade IdleTokenGovernance implementation to remove flash loans \n https://gov.idle.finance/t/iip-17-idletokens-upgrade-to-remove-flash-loans/738";
 export default task("iip-17", "Upgrade IdleTokenGovernance")
   .setAction(async(_, hre) => {
 
