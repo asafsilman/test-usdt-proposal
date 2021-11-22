@@ -79,11 +79,10 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
         };
     }
 
-    const mintAndRedeem = async (account: any) => {
+    const mintAndRedeem = async (account: any, allocations: any) => {
       console.log('#### Testing mint and redeem for user: ', account.address);
       const underlying = await idleToken.token();
       const underlyingContract = await hre.ethers.getContractAt("IERC20Detailed", underlying);
-      const idleContract = await hre.ethers.getContractAt("IERC20Detailed", addresses.IDLE);
       const tokenDecimals = await underlyingContract.decimals();
       const oneToken = toBN(`10`).pow(tokenDecimals);
 
@@ -132,20 +131,25 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
           token: token,
           tokenName: await token.name(),
           balanceBefore: await token.balanceOf(account.address),
+          balanceContractBefore: await token.balanceOf(idleToken.address),
         }
       }
 
       await waitBlocks(1000);
+      // poke
+      // await setAllocationsAndRebalance(idleToken, allocations, 0, '');
+
       const balance = await idleToken.balanceOf(account.address);
       await idleToken.connect(account).redeemIdleToken(balance);
       for (const address in govTokensBalances) {
         const data = govTokensBalances[address];
         const balanceAfter = await data.token.balanceOf(account.address);
+        const balanceContractAfter = await data.token.balanceOf(idleToken.address);
 
         if (balanceAfter.gt(data.balanceBefore)) {
-          console.log(`✅ gov token ${data.tokenName} balance increased correctly (${data.balanceBefore} -> ${balanceAfter})`);
+          console.log(`✅ gov token ${data.tokenName} balance increased correctly (${data.balanceBefore} -> ${balanceAfter}, contractBal ${data.balanceContractBefore} -> ${balanceContractAfter})`);
         } else {
-          console.log(`🚨🚨 ERROR!!! gov token ${data.tokenName} balance didn't increase (${data.balanceBefore} -> ${balanceAfter})`);
+          console.log(`🚨🚨 ERROR!!! gov token ${data.tokenName} balance didn't increase (${data.balanceBefore} -> ${balanceAfter}, contractBal ${data.balanceContractBefore} -> ${balanceContractAfter})`);
         }
       }
     }
@@ -160,5 +164,5 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
     }
 
     await setAllocationsAndRebalance(idleToken, allocations, unlent, whale);
-    await mintAndRedeem(account);
+    await mintAndRedeem(account, allocations);
 })
