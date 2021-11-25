@@ -26,7 +26,7 @@ export default task("upgrade-and-call-polygon", "Deploy IIP 11 to Disable AAVE v
       addrs.maticIdleDAIV4, addrs.maticIdleUSDCV4, addrs.maticIdleWETHV4
     ];
 
-    const newImplementationAddr = "0x26F1Ac97dEfFF4fce24408C717e9C7D3754EFB6b";
+    const newImplementationAddr = "0xC10b35fE63ab37c42b2A812b9dcd1b071627647b";
     const proxyAdminAddress = "0xCF8977156cc60a5c9bF32d44C143A60CDe6341c3";
     let proxyAdmin = await hre.ethers.getContractAt((await hre.artifacts.readArtifact("IProxyAdmin")).abi, proxyAdminAddress);
     proxyAdmin = proxyAdmin.connect(signer);
