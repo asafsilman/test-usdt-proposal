@@ -1,5 +1,6 @@
 import { task } from "hardhat/config"
 import { BigNumber } from "ethers";
+import { AlphaProposalBuilder } from "@idle-finance/hardhat-proposals-plugin/dist/src/proposals/compound-alpha";
 
 const addresses = require("../common/addresses")
 const TimelockABI = require("../abi/Timelock.json");
@@ -24,15 +25,15 @@ export default task("iip-18", "Upgrade Governor Alpha")
 
         proposalBuilder = proposalBuilder
                             .addContractAction(timelock, "setPendingAdmin", [governorBravoAddress])
-                            .addContractAction(governorBravo, "_initiate", [addresses.governorAlpha])
-                            .addContractAction(governorBravo, "_setWhitelistGuardian", [addresses.devLeagueMultisig]);
+                            .addContractAction(governorBravo, "_setWhitelistGuardian", [addresses.devLeagueMultisig])
+                            .addContractAction(governorBravo, "_initiate", [addresses.governorAlpha]);
 
         // Proposal
         proposalBuilder.setDescription(iipDescription);
         const proposal = proposalBuilder.build()
         await proposal.printProposalInfo();
 
-        await hre.run('execute-proposal-or-simulate', {proposal, isLocalNet, fullSimulation: true});
+        await hre.run('execute-proposal-or-simulate', {proposal, isLocalNet});
 
         // Skip tests in mainnet
         if (!isLocalNet) {
@@ -44,6 +45,7 @@ export default task("iip-18", "Upgrade Governor Alpha")
         // Test that the governor returns the correct values for admin and initial proposal
         const governorAdmin = await governorBravo.admin();
         const governorInitialProposal = await governorBravo.initialProposalId();
+        const whitelistedGuardian = await governorBravo.whitelistGuardian();
         const timelockAdmin = await timelock.admin();
 
         if(governorAdmin == timelock.address) {
@@ -64,14 +66,28 @@ export default task("iip-18", "Upgrade Governor Alpha")
             console.log(`Timelock admin is NOT Governor Bravo: ${timelockAdmin}`);
         }
 
-        governorBravo = await hre.ethers.getContractAt(GovernorAlphaABI, governorBravoAddress);
-        proposalBuilder.setGovernor(governorBravo);
+        if(whitelistedGuardian == addresses.devLeagueMultisig) {
+            console.log("✅ Whitelisted Guardian is Dev Multisig");
+        } else {
+            console.log(`Whitelisted Guardian is NOT Dev Multisig: ${whitelistedGuardian}`);
+        }
 
         const idleDAI = await hre.ethers.getContractAt(IdleTokenGovernanceABI, addresses.idleDAIV4);
 
-        proposalBuilder = proposalBuilder.addContractAction(idleDAI, "setFee", [toBN(9000)])
-        const proposalBravo = proposalBuilder.build()
+        governorBravo = await hre.ethers.getContractAt(GovernorBravoDelegateABI, governorBravoAddress);
+        
+        let builderBravo = new AlphaProposalBuilder(hre, governorBravo, hre.config.proposals.votingToken)
+        builderBravo.addContractAction(idleDAI, "setFee", [toBN('9000')])
+        const proposalBravo = builderBravo.build()
         await proposalBravo.printProposalInfo();
 
-        await hre.run('execute-proposal-or-simulate', {proposal, isLocalNet});
+        await hre.run('execute-proposal-or-simulate', {proposal: proposalBravo, isLocalNet});
+        
+        let fees = await idleDAI.fee();
+
+        if (fees.eq(toBN('9000'))) {
+            console.log(`✅ idleDAI fee: ${fees}`);
+        } else {
+            console.log(`Wrong idleDAI fee: ${fees}`);
+        }
     });
