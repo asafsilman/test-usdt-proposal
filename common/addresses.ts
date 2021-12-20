@@ -774,6 +774,7 @@ module.exports = {
   idleFUSEImplementation,
   proxyAdminPolygon,
   polygonDev: '0xE5Dab8208c1F4cce15883348B72086dBace3e64B',
+  polygonMultisig: '0x61A944Ca131Ab78B23c8449e0A2eF935981D5cF6',
   addr0: '0x0000000000000000000000000000000000000000',
   idleController: '0x275DA8e61ea8E02d51EDd8d0DC5c0E62b4CDB0BE',
   governorAlpha: '0x2256b25CFC8E35c3135664FD03E77595042fe31B',

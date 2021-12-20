@@ -51,14 +51,15 @@ export default task("test-idle-token", "Test an idleToken by doing a rebalance",
         console.log("tokens", tokens.join(", "));
         const idleTokenName = await idleToken.name();
         console.log("curr allocations", (await idleToken.getAllocations()).map((x: any) => x.toString()));
-
+        
         let bn_allocations = allocations.map<BigNumber>(toBN);
         console.log("new allocations", bn_allocations.toString());
+        const rebalancerAddr = await idleToken.rebalancer();
 
-        await hre.network.provider.send("hardhat_setBalance", [addresses.timelock, "0xffffffffffffffff"]);
-        await hre.network.provider.send("hardhat_impersonateAccount", [addresses.timelock]);
-        const timelock = await hre.ethers.getSigner(addresses.timelock);
-        idleToken = idleToken.connect(timelock);
+        await hre.network.provider.send("hardhat_setBalance", [rebalancerAddr, "0xffffffffffffffff"]);
+        await hre.network.provider.send("hardhat_impersonateAccount", [rebalancerAddr]);
+        const rebalancer = await hre.ethers.getSigner(rebalancerAddr);
+        idleToken = idleToken.connect(rebalancer);
 
         await idleToken.setAllocations(bn_allocations);
         const newAllocations = await idleToken.getAllocations();
