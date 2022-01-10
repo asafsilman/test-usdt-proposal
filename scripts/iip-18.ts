@@ -4,7 +4,9 @@ import { AlphaProposalBuilder } from "@idle-finance/hardhat-proposals-plugin/dis
 
 const addresses = require("../common/addresses")
 const TimelockABI = require("../abi/Timelock.json");
+const ERC20_ABI = require("../abi/ERC20.json")
 const GovernorAlphaABI = require("../abi/GovernorAlpha.json");
+const FeeCollectorABI = require("../abi/FeeCollector.json")
 const GovernorBravoDelegateABI = require("../abi/GovernorBravoDelegate.json");
 const IdleTokenGovernanceABI = require("../abi/IdleTokenGovernance.json");
 
@@ -19,11 +21,18 @@ export default task("iip-18", "Upgrade Governor Alpha")
         const governorBravoAddress = '0x3D5Fc645320be0A085A32885F078F7121e5E5375';
 
         const timelock = await hre.ethers.getContractAt(TimelockABI, addresses.timelock);
-        let governorBravo = await hre.ethers.getContractAt(GovernorBravoDelegateABI, governorBravoAddress);
+        const feeCollector = await hre.ethers.getContractAt(FeeCollectorABI, addresses.feeCollector);
+        const bpoolToken = await hre.ethers.getContractAt(ERC20_ABI, '0x859e4d219e83204a2ea389dac11048cc880b6aa8'); // idle smart treasury balancer pool token
 
+        let governorBravo = await hre.ethers.getContractAt(GovernorBravoDelegateABI, governorBravoAddress);
         let proposalBuilder = hre.proposals.builders.alpha();
+        
+        let feeCollectorBpoolBalance = await bpoolToken.balanceOf(addresses.feeCollector);
+        let newAllocations = [toBN(0), toBN(20000), toBN(30000), toBN(50000)]
 
         proposalBuilder = proposalBuilder
+                            .addContractAction(feeCollector, "setSplitAllocation", [newAllocations])
+                            .addContractAction(feeCollector, "withdrawUnderlying", [addresses.treasuryMultisig, feeCollectorBpoolBalance, [0, 0]])
                             .addContractAction(timelock, "setPendingAdmin", [governorBravoAddress])
                             .addContractAction(governorBravo, "_setWhitelistGuardian", [addresses.devLeagueMultisig])
                             .addContractAction(governorBravo, "_initiate", [addresses.governorAlpha]);
@@ -41,6 +50,18 @@ export default task("iip-18", "Upgrade Governor Alpha")
         }
 
         console.log("Checking effects...");
+
+        // Check that allocations are changed for the FeeCollector
+        const allocations = await feeCollector.getSplitAllocation();
+
+
+        for(let i in newAllocations) {
+            if(newAllocations[i].eq(allocations[i])) {
+                console.log(`✅ Allocation ${i} correct`);
+            } else {
+                console.log(`Allocation ${i} incorrect`);
+            }
+        }
 
         // Test that the governor returns the correct values for admin and initial proposal
         const governorAdmin = await governorBravo.admin();
