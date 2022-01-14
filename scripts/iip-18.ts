@@ -21,12 +21,13 @@ export default task("iip-18", "Upgrade Governor Alpha")
         const isLocalNet = hre.network.name == 'hardhat';
 
         const governorBravoAddress = '0x3D5Fc645320be0A085A32885F078F7121e5E5375';
-
+        const smartTreasury = '0xCaf467DFE064a1F54e4ece8515Ddf326B9bE801E';
         const timelock = await hre.ethers.getContractAt(TimelockABI, addresses.timelock);
         const feeCollector = await hre.ethers.getContractAt(FeeCollectorABI, addresses.feeCollector);
         const feeTreasury = await hre.ethers.getContractAt(GovernableFundABI, addresses.feeTreasury);
         const ecosystemFund = await hre.ethers.getContractAt(GovernableFundABI, addresses.ecosystemFund);
         const bpoolToken = await hre.ethers.getContractAt(ERC20_ABI, '0x859e4d219e83204a2ea389dac11048cc880b6aa8'); // idle smart treasury balancer pool token
+        const idleDAI = await hre.ethers.getContractAt(IdleTokenGovernanceABI, addresses.idleDAIV4);
 
         let governorBravo = await hre.ethers.getContractAt(GovernorBravoDelegateABI, governorBravoAddress);
         let proposalBuilder = hre.proposals.builders.alpha();
@@ -38,9 +39,13 @@ export default task("iip-18", "Upgrade Governor Alpha")
         const wethToken = await hre.ethers.getContractAt(ERC20_ABI, addresses.WETH['live']); // weth token
         const usdcToken = await hre.ethers.getContractAt(ERC20_ABI, addresses.USDC['live']); // usdc token
 
-        const usdcBalanceFeeTreasury = usdcToken.balanceOf(addresses.feeTreasury);
-        const wethBalanceFeeTreasury = wethToken.balanceOf(addresses.feeTreasury);
+        const usdcBalanceFeeTreasury = await usdcToken.balanceOf(addresses.feeTreasury);
+        const wethBalanceFeeTreasury = await wethToken.balanceOf(addresses.feeTreasury);
+        const idleBalanceFeeTreasury = await idleToken.balanceOf(addresses.feeTreasury);
+        const wethBalanceSmart = await wethToken.balanceOf(smartTreasury);
+        const idleBalanceSmart = await idleToken.balanceOf(smartTreasury);
         const idleAmountToTransfer = toBN(48493).mul(ONE);
+        let initialFee = await idleDAI.fee();
 
         proposalBuilder = proposalBuilder
             .addContractAction(feeTreasury, "transfer", [addresses.USDC['live'], addresses.treasuryMultisig, usdcBalanceFeeTreasury])
@@ -68,9 +73,18 @@ export default task("iip-18", "Upgrade Governor Alpha")
             return;
         }
 
+        console.log("IdleDAI initial fee: ", initialFee.toString());
+
+        console.log(`Smart Treasury IDLE balance before: ${hre.ethers.utils.formatEther(idleBalanceSmart)}`);
+        console.log(`Smart Treasury WETH balance before: ${hre.ethers.utils.formatEther(wethBalanceSmart)}`);
+
+        console.log(`Treasury IDLE balance before: ${hre.ethers.utils.formatEther(idleBalanceFeeTreasury)}`);
+        console.log(`Treasury USDC balance before: ${hre.ethers.utils.formatEther(usdcBalanceFeeTreasury)}`);
+        console.log(`Treasury WETH balance before: ${hre.ethers.utils.formatEther(wethBalanceFeeTreasury)}`);
+
         console.log("Checking effects...");
 
-        // Check that allocations are changed for the FeeCollector        
+        // Check that allocations are changed for the FeeCollector
         const allocations = await feeCollector.getSplitAllocation();
         const treasuryIdleBalanceAfter = await idleToken.balanceOf(addresses.treasuryMultisig);
         const treasuryWETHBalanceAfter = await wethToken.balanceOf(addresses.treasuryMultisig);
@@ -86,19 +100,19 @@ export default task("iip-18", "Upgrade Governor Alpha")
         console.log(`Treasury IDLE balance increase: ${hre.ethers.utils.formatEther(treasuryIdleBalanceIncrease)}`);
         console.log(`Treasury WETH balance increase: ${hre.ethers.utils.formatEther(treasuryWETHBalanceIncrease)}`);
 
-        if (treasuryIdleBalanceIncrease.gt(toBN(208000).mul(ONE).add(idleAmountToTransfer)) 
+        if (treasuryIdleBalanceIncrease.gt(toBN(208000).mul(ONE).add(idleAmountToTransfer))
             && treasuryWETHBalanceIncrease.gt(toBN(15).mul(ONE).add(wethBalanceFeeTreasury))
             && treasuryUSDCBalanceIncrease.eq(usdcBalanceFeeTreasury)) {
             console.log(`✅ Correct balance increases!`);
         } else {
-            console.log('Incorrect increase in treasury balances');
+            console.log('🚨 Incorrect increase in treasury balances');
         }
 
         for (let i in newAllocations) {
             if (newAllocations[i].eq(allocations[i])) {
                 console.log(`✅ Allocation ${i} correct`);
             } else {
-                console.log(`Allocation ${i} incorrect`);
+                console.log(`🚨 Allocation ${i} incorrect`);
             }
         }
 
@@ -111,28 +125,26 @@ export default task("iip-18", "Upgrade Governor Alpha")
         if (governorAdmin == timelock.address) {
             console.log("✅ Governor Admin is Timelock");
         } else {
-            console.log(`Governor admin is NOT Timelock: ${governorAdmin}`)
+            console.log(`🚨 Governor admin is NOT Timelock: ${governorAdmin}`)
         }
 
         if (governorInitialProposal.toString() == "18") {
             console.log("✅ Governor initialProposalCount is correct (18)");
         } else {
-            console.log(`Governor initialProposalCount is NOT correct: ${governorInitialProposal}`);
+            console.log(`🚨 Governor initialProposalCount is NOT correct: ${governorInitialProposal}`);
         }
 
         if (timelockAdmin == governorBravoAddress) {
             console.log("✅ Timelock admin is Governor Bravo");
         } else {
-            console.log(`Timelock admin is NOT Governor Bravo: ${timelockAdmin}`);
+            console.log(`🚨 Timelock admin is NOT Governor Bravo: ${timelockAdmin}`);
         }
 
         if (whitelistedGuardian == addresses.devLeagueMultisig) {
             console.log("✅ Whitelisted Guardian is Dev Multisig");
         } else {
-            console.log(`Whitelisted Guardian is NOT Dev Multisig: ${whitelistedGuardian}`);
+            console.log(`🚨 Whitelisted Guardian is NOT Dev Multisig: ${whitelistedGuardian}`);
         }
-
-        const idleDAI = await hre.ethers.getContractAt(IdleTokenGovernanceABI, addresses.idleDAIV4);
 
         governorBravo = await hre.ethers.getContractAt(GovernorBravoDelegateABI, governorBravoAddress);
 
@@ -148,6 +160,6 @@ export default task("iip-18", "Upgrade Governor Alpha")
         if (fees.eq(toBN('9000'))) {
             console.log(`✅ idleDAI fee: ${fees}`);
         } else {
-            console.log(`Wrong idleDAI fee: ${fees}`);
+            console.log(`🚨 Wrong idleDAI fee: ${fees}`);
         }
     });
