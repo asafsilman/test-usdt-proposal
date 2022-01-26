@@ -21,10 +21,12 @@ export default task("upgrade-and-call-polygon", "Deploy IIP 11 to Disable AAVE v
   }
 
   const idleTokensPoly = [
-    addrs.maticIdleDAIV4, addrs.maticIdleUSDCV4, addrs.maticIdleWETHV4
+    addrs.maticIdleUSDCV4,
+    addrs.maticIdleWETHV4,
+    addrs.maticIdleDAIV4,
   ];
 
-  const newImplementationAddr = "0xC2843221EB7852f4f363c4507aB22Cd5dF05dF2e";
+  const newImplementationAddr = addrs.lastIdleTokenImplementationPolygon;
   const proxyAdminAddress = addrs.proxyAdminPolygon;
   let proxyAdmin = await hre.ethers.getContractAt((await hre.artifacts.readArtifact("IProxyAdmin")).abi, proxyAdminAddress);
   proxyAdmin = proxyAdmin.connect(signer);
@@ -40,7 +42,7 @@ export default task("upgrade-and-call-polygon", "Deploy IIP 11 to Disable AAVE v
     console.log('upgradeAndCall for ', idleTokenAddr);
     await proxyAdmin.upgrade(idleTokenAddr, newImplementationAddr);
     // await proxyAdmin.upgradeAndCall(idleTokenAddr, newImplementationAddr, initMethodCall);
-
+    console.log('Upgraded')
     // Test rebalance
     // Spread funds between all protocols
     let currentProtocolTokens = [...(await idleToken.getAPRs())["0"]].map(x => x.toLowerCase())

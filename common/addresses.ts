@@ -796,6 +796,7 @@ module.exports = {
   // lastIdleTokenImplementation: '0xb776dd8f1f86c78260f9a43920cbc72d78de322c',
   // from of 19/11/2021
   lastIdleTokenImplementation: '0x577d963246d28dbe0dc579048adda421b054924a',
+  lastIdleTokenImplementationPolygon: '0xc3418e11bA8052E31D2a5DaF890597223990CC51',
   priceOracleV2: priceOracleV2,
   priceOracleV3: priceOracleV3,
   priceOracleV3Matic: "0x12271d4Ba175F20Dd673218E780426158D0b0f07",
