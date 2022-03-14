@@ -84,7 +84,7 @@ const config: HardhatUserConfig = {
     }
   },
   proposals: {
-    governor: "0x2256b25CFC8E35c3135664FD03E77595042fe31B",
+    governor: "0x3D5Fc645320be0A085A32885F078F7121e5E5375",
     votingToken: "0x875773784Af8135eA0ef43b5a374AaD105c5D39e"
   }
 }
