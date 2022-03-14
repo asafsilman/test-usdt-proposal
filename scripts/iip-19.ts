@@ -33,12 +33,20 @@ export default task("iip-19", "Refund Treasury (IDLE) and update IdleController"
 
         const idleToken = await hre.ethers.getContractAt(ERC20_ABI, addresses.IDLE); // idle token    
         const idleAmountToTransfer = toBN(261000).mul(ONE);
+        await hre.network.provider.send("hardhat_impersonateAccount", [addresses.devLeagueMultisig])
+        const signer = await hre.ethers.getSigner(addresses.devLeagueMultisig)
 
         proposalBuilder = proposalBuilder
             .addContractAction(ecosystemFund, "transfer", [addresses.IDLE, addresses.treasuryMultisig, idleAmountToTransfer])
             .addContractAction(unitroller, "_setPendingImplementation", [idleControllerNewImpl])
             .addContractAction(idleControllerNew, "_become", [unitroller.address])
-            .addContractAction(feeCollector, "registerTokenToDepositList", [addresses.FEI['live']]);
+            .addContractAction(feeCollector, "registerTokenToDepositList", [addresses.FEI['live']])
+    
+        if (isLocalNet) {
+            // for testing
+            proposalBuilder = proposalBuilder
+                .addContractAction(unitroller, "_setPendingAdmin", [addresses.devLeagueMultisig]);
+        }
 
         // Proposal
         proposalBuilder.setDescription(iipDescription);
@@ -87,5 +95,18 @@ export default task("iip-19", "Refund Treasury (IDLE) and update IdleController"
             console.log(`✅ FEI added to FeeCollector!`);
         } else {
             console.log('🚨 FEI *NOT* added to FeeCollector!');
+        }
+
+        // Check that new implementation is working
+        const treasuryIdleBal0 = await idleToken.balanceOf(addresses.treasuryMultisig);
+        await unitroller.connect(signer)._acceptAdmin();
+        const newUnitroller = await hre.ethers.getContractAt(IdleControllerAbi, unitroller.address);
+        await newUnitroller.connect(signer)._withdrawToken(addresses.IDLE, addresses.treasuryMultisig, idleAmountToTransfer.div(2));
+        const treasuryIdleBal1 = await idleToken.balanceOf(addresses.treasuryMultisig);
+
+        if (treasuryIdleBal1.sub(treasuryIdleBal0).eq(idleAmountToTransfer.div(2))) {
+            console.log(`✅ Implementation working, correct balance!`);
+        } else {
+            console.log('🚨 Incorrect increase in treasury balances!');
         }
     });
