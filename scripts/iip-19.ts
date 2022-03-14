@@ -19,21 +19,18 @@ export default task("iip-19", "Refund Treasury (IDLE) and update IdleController"
     .setAction(async (_, hre) => {
         const isLocalNet = hre.network.name == 'hardhat';
 
-        const governorBravoAddress = '0x3D5Fc645320be0A085A32885F078F7121e5E5375';
         const idleControllerNewImpl = '0x2c08baCc1Fc6095F21eb59E57318A6c06D3fCa24'
-
-        let governorBravo = await hre.ethers.getContractAt(GovernorBravoDelegateABI, governorBravoAddress);
-        let proposalBuilder = new AlphaProposalBuilder(hre, governorBravo, hre.config.proposals.votingToken);
-
+        
         const ecosystemFund = await hre.ethers.getContractAt(GovernableFundABI, addresses.ecosystemFund);
         const unitroller = await hre.ethers.getContractAt(UnitrollerAbi, addresses.idleController);
         const feeCollector = await hre.ethers.getContractAt(FeeCollectorABI, addresses.feeCollector);
         const idleControllerNew = await hre.ethers.getContractAt(IdleControllerAbi, idleControllerNewImpl);
-
-
+        
+        
         const idleToken = await hre.ethers.getContractAt(ERC20_ABI, addresses.IDLE); // idle token    
         const idleAmountToTransfer = toBN(261000).mul(ONE);
-
+        
+        let proposalBuilder = hre.proposals.builders.alpha();
         proposalBuilder = proposalBuilder
             .addContractAction(ecosystemFund, "transfer", [addresses.IDLE, addresses.treasuryMultisig, idleAmountToTransfer])
             .addContractAction(unitroller, "_setPendingImplementation", [idleControllerNewImpl])
