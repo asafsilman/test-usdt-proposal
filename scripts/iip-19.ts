@@ -20,18 +20,13 @@ export default task("iip-19", "Refund Treasury (IDLE) and update IdleController"
         const isLocalNet = hre.network.name == 'hardhat';
 
         const idleControllerNewImpl = '0x2c08baCc1Fc6095F21eb59E57318A6c06D3fCa24'
+        const idleAmountToTransfer = toBN(211493).mul(ONE);
         
         const ecosystemFund = await hre.ethers.getContractAt(GovernableFundABI, addresses.ecosystemFund);
         const unitroller = await hre.ethers.getContractAt(UnitrollerAbi, addresses.idleController);
         const feeCollector = await hre.ethers.getContractAt(FeeCollectorABI, addresses.feeCollector);
         const idleControllerNew = await hre.ethers.getContractAt(IdleControllerAbi, idleControllerNewImpl);
-        
-        
         const idleToken = await hre.ethers.getContractAt(ERC20_ABI, addresses.IDLE); // idle token    
-        const idleAmountToTransfer = toBN(261000).mul(ONE);
-        await hre.network.provider.send("hardhat_impersonateAccount", [addresses.devLeagueMultisig])
-        const signer = await hre.ethers.getSigner(addresses.devLeagueMultisig)
-
         
         let proposalBuilder = hre.proposals.builders.alpha();
         proposalBuilder = proposalBuilder
@@ -59,6 +54,9 @@ export default task("iip-19", "Refund Treasury (IDLE) and update IdleController"
         if (!isLocalNet) {
             return;
         }
+
+        await hre.network.provider.send("hardhat_impersonateAccount", [addresses.devLeagueMultisig])
+        const signer = await hre.ethers.getSigner(addresses.devLeagueMultisig)
 
         console.log("Checking effects...");
         
