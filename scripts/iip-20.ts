@@ -67,7 +67,7 @@ export default task("iip-20", iipDescription)
     const gaugeIdleBalanceAfter = await idleToken.balanceOf(addresses.gaugeDistributor);
     const distributorIdleBalanceIncrease = gaugeIdleBalanceAfter.sub(gaugeIdleBalanceBefore);
     check(distributorIdleBalanceIncrease.eq(idleFromController),
-      `Treasury balance ${hre.ethers.utils.formatEther(gaugeIdleBalanceBefore)} -> ${hre.ethers.utils.formatEther(gaugeIdleBalanceAfter)} (+ ${hre.ethers.utils.formatEther(distributorIdleBalanceIncrease)})`);
+      `Distributor balance ${hre.ethers.utils.formatEther(gaugeIdleBalanceBefore)} -> ${hre.ethers.utils.formatEther(gaugeIdleBalanceAfter)} (+ ${hre.ethers.utils.formatEther(distributorIdleBalanceIncrease)})`);
 
     // check that idleController rate is changed
     const idleControllerRate = await idleController.idleRate();
@@ -78,7 +78,7 @@ export default task("iip-20", iipDescription)
     // Check that speed changed for idle tokens
     const daiSpeedAfter = await idleController.idleSpeeds(idleDAI);
     check(!daiSpeedAfter.eq(daiSpeed),
-      `Idle speed changed ${daiSpeed} -> ${daiSpeedAfter}`);
+      `IdleController speed changed for dai ${daiSpeed} -> ${daiSpeedAfter}`);
 
     // Check that claimIdle is still working for dai
     const balBefore = await idleToken.balanceOf(idleDAI);
@@ -86,7 +86,7 @@ export default task("iip-20", iipDescription)
     const balAfter = await idleToken.balanceOf(idleDAI);
     // balance should increase
     check(balAfter.gt(balBefore),
-      `Idle claimIdle increased ${balBefore} -> ${balAfter}`);
+      `IDLE after claimIdle increased ${balBefore} -> ${balAfter}`);
 
     // mine 8 months of blocks (considering blocknumber 14474950 for fork), 
     // ie 8 * 30 * 6400 = 1536000 blocks (in hex is 0x177000)
@@ -97,7 +97,7 @@ export default task("iip-20", iipDescription)
     const daiBal2 = await idleToken.balanceOf(idleDAI);
     // balance should increase
     check(daiBal2.gt(daiBal),
-      `Idle claimIdle increased ${daiBal} -> ${daiBal2}`);
+      `IDLE after claimIdle increased ${daiBal} -> ${daiBal2}`);
 
     // mine 1 more month of blocks, ie 30 * 6400 = 192000 blocks (0x1646592)
     await hre.network.provider.send("hardhat_mine", ["0x1646592"]);
@@ -106,5 +106,5 @@ export default task("iip-20", iipDescription)
     await idleController.claimIdle([], [idleDAI]);
     const daiBalAfter = await idleToken.balanceOf(idleDAI);
     check(daiBalAfter.eq(daiBalBefore),
-      `Idle claimIdle equal ${daiBalBefore} -> ${daiBalAfter}`);
+      `IDLE after claimIdle equal ${daiBalBefore} -> ${daiBalAfter}`);
   });
