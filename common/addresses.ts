@@ -796,7 +796,7 @@ module.exports = {
   // lastIdleTokenImplementation: '0xb776dd8f1f86c78260f9a43920cbc72d78de322c',
   // from of 19/11/2021
   lastIdleTokenImplementation: '0x577d963246d28dbe0dc579048adda421b054924a',
-  lastIdleTokenImplementationPolygon: '0xc3418e11bA8052E31D2a5DaF890597223990CC51',
+  lastIdleTokenImplementationPolygon: '0xdb8d065F7F557be9B5B09D3B216070c792248070',
   priceOracleV2: priceOracleV2,
   priceOracleV3: priceOracleV3,
   priceOracleV3Matic: "0x12271d4Ba175F20Dd673218E780426158D0b0f07",
@@ -810,5 +810,8 @@ module.exports = {
   feeCollector: '0xBECC659BFC6EDCA552FA1A67451CC6B38A0108E4',
   priceOracleV1: '0x972a64d108e250df98dbeac8170678501f5ef181',
   idleMultisig,
-  randomAddr
+  randomAddr,
+  // Gauges
+  gaugeDistributor: '0x1276A8ee84900bD8CcA6e9b3ccB99FF4771Fe329',
+  AALidoMultirewards: '0xA357AF9430e4504419A7A05e217D4A490Ecec6FA'
 };
